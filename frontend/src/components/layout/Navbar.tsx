@@ -116,15 +116,11 @@ export function Navbar() {
           <div className="flex h-16 items-center justify-between gap-4">
 
             {/* ── Left: Logo ──────────────────────────────────────────────────────
-                LOGO PLACEMENT: Replace the text "Byafa" below with your logo image.
-                Example: <img src="/logo.svg" alt="Byafa" className="h-8 w-auto" />
-                Keep the Link wrapper — it handles the home navigation.
+                LOGO PLACEMENT: To swap back to text, replace the img tag with:
+                <span className="text-xl font-bold text-emerald-600 tracking-tight">Byafa</span>
             ─────────────────────────────────────────────────────────────────── */}
-            <Link
-              to="/"
-              className="shrink-0 text-xl font-bold text-emerald-600 hover:text-emerald-700 transition-colors tracking-tight"
-            >
-              Byafa
+            <Link to="/" className="shrink-0">
+              <img src="/logo.png" alt="Byafa" className="h-8 w-auto" />
             </Link>
 
             {/* ── Center: Desktop nav links ───────────────────────── */}
@@ -283,12 +279,8 @@ export function Navbar() {
       >
         {/* Drawer header — logo placement same as main header */}
         <div className="flex h-16 items-center justify-between px-5 border-b border-gray-200 shrink-0">
-          <Link
-            to="/"
-            onClick={closeDrawer}
-            className="text-xl font-bold text-emerald-600 tracking-tight"
-          >
-            Byafa
+          <Link to="/" onClick={closeDrawer} className="shrink-0">
+            <img src="/logo.png" alt="Byafa" className="h-8 w-auto" />
           </Link>
           <button
             onClick={closeDrawer}
