@@ -1,0 +1,1079 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>simple-ecommerce — UX Design Directions</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f3f4f6; color: #111827; }
+  .nav-tabs { display: flex; gap: 8px; padding: 24px 32px 0; background: #1f2937; flex-wrap: wrap; }
+  .tab { padding: 10px 20px; border-radius: 8px 8px 0 0; cursor: pointer; font-size: 13px; font-weight: 500; color: #9ca3af; background: #374151; border: none; transition: all 0.15s; }
+  .tab.active { background: #f3f4f6; color: #111827; }
+  .tab:hover:not(.active) { color: #d1d5db; }
+  .screen { display: none; background: #f3f4f6; min-height: calc(100vh - 56px); }
+  .screen.active { display: block; }
+  .screen-label { text-align: center; padding: 16px; font-size: 12px; font-weight: 600; color: #6b7280; letter-spacing: 0.1em; text-transform: uppercase; }
+  .mockup { max-width: 1280px; margin: 0 auto 40px; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
+  .mockup-label { background: #111827; color: #9ca3af; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 8px 16px; }
+
+  /* ===== SHARED COMPONENTS ===== */
+  .header { display: flex; align-items: center; justify-content: space-between; padding: 0 32px; height: 64px; border-bottom: 1px solid #e5e7eb; background: white; position: sticky; top: 0; z-index: 10; }
+  .logo { font-size: 18px; font-weight: 700; color: #111827; letter-spacing: -0.02em; }
+  .header-nav { display: flex; gap: 32px; }
+  .header-nav a { font-size: 14px; color: #6b7280; text-decoration: none; font-weight: 500; }
+  .header-nav a:hover { color: #111827; }
+  .header-actions { display: flex; align-items: center; gap: 16px; }
+  .cart-btn { display: flex; align-items: center; gap: 6px; padding: 8px 16px; background: #111827; color: white; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; }
+  .cart-badge { background: #2563eb; color: white; border-radius: 9999px; font-size: 11px; font-weight: 700; padding: 1px 6px; }
+  .btn-primary { padding: 10px 20px; background: #111827; color: white; border-radius: 6px; font-size: 14px; font-weight: 500; border: none; cursor: pointer; transition: background 0.15s; }
+  .btn-primary:hover { background: #1f2937; }
+  .btn-secondary { padding: 10px 20px; background: white; color: #111827; border-radius: 6px; font-size: 14px; font-weight: 500; border: 1px solid #e5e7eb; cursor: pointer; }
+  .btn-ghost { padding: 10px 20px; background: transparent; color: #6b7280; border-radius: 6px; font-size: 14px; font-weight: 500; border: none; cursor: pointer; }
+  .badge { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 9999px; font-size: 12px; font-weight: 500; }
+  .badge-pending { background: #fffbeb; color: #d97706; }
+  .badge-processing { background: #eff6ff; color: #2563eb; }
+  .badge-shipped { background: #f5f3ff; color: #7c3aed; }
+  .badge-delivered { background: #f0fdf4; color: #16a34a; }
+  .badge-cancelled { background: #fef2f2; color: #dc2626; }
+  .badge-instock { background: #f0fdf4; color: #16a34a; }
+  .badge-lowstock { background: #fffbeb; color: #d97706; }
+  .badge-outofstock { background: #fef2f2; color: #dc2626; }
+  .stars { color: #f59e0b; font-size: 13px; }
+  .input { width: 100%; padding: 10px 14px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 14px; color: #111827; background: #f9fafb; outline: none; font-family: inherit; }
+  .input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); background: white; }
+  .input-error { border-color: #dc2626; background: #fef2f2; }
+  .input-label { font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 6px; display: block; }
+  .error-msg { font-size: 12px; color: #dc2626; margin-top: 4px; }
+  .section-title { font-size: 24px; font-weight: 600; color: #111827; margin-bottom: 8px; }
+  .section-sub { font-size: 14px; color: #6b7280; margin-bottom: 24px; }
+  .divider { height: 1px; background: #e5e7eb; margin: 24px 0; }
+  .toast { display: inline-flex; align-items: center; gap: 10px; padding: 12px 16px; background: #111827; color: white; border-radius: 8px; font-size: 13px; font-weight: 500; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+  .toast-success { background: #16a34a; }
+  .toast-error { background: #dc2626; }
+  .skeleton { background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 6px; }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+</style>
+</head>
+<body>
+<!-- TABS -->
+<div class="nav-tabs">
+  <button class="tab active" onclick="showScreen('homepage')">🏠 Homepage</button>
+  <button class="tab" onclick="showScreen('catalog')">🛍️ Product Catalog</button>
+  <button class="tab" onclick="showScreen('product')">📦 Product Detail</button>
+  <button class="tab" onclick="showScreen('cart')">🛒 Cart</button>
+  <button class="tab" onclick="showScreen('checkout')">💳 Checkout</button>
+  <button class="tab" onclick="showScreen('confirmation')">✅ Order Confirmation</button>
+  <button class="tab" onclick="showScreen('orders')">📋 Order History</button>
+  <button class="tab" onclick="showScreen('admin')">⚙️ Admin Dashboard</button>
+  <button class="tab" onclick="showScreen('components')">🧩 Components</button>
+</div>
+
+<!-- ===== SCREEN 1: HOMEPAGE ===== -->
+<div id="screen-homepage" class="screen active">
+  <div class="screen-label">Screen 1 — Homepage / Storefront</div>
+  <div class="mockup" style="padding:0;">
+    <div class="mockup-label">HOMEPAGE — Desktop (1280px)</div>
+    <!-- Header -->
+    <div class="header">
+      <div class="logo">simple<span style="color:#2563eb">.</span>store</div>
+      <nav class="header-nav">
+        <a href="#">Shop</a>
+        <a href="#">Categories</a>
+        <a href="#">About</a>
+      </nav>
+      <div class="header-actions">
+        <a href="#" style="font-size:14px;color:#6b7280;text-decoration:none;font-weight:500;">Sign in</a>
+        <button class="cart-btn">🛒 Cart <span class="cart-badge">2</span></button>
+      </div>
+    </div>
+    <!-- Hero -->
+    <div style="background:linear-gradient(135deg,#111827 0%,#1f2937 100%);padding:80px 64px;display:flex;align-items:center;justify-content:space-between;gap:48px;">
+      <div style="max-width:520px;">
+        <div style="font-size:12px;font-weight:600;letter-spacing:0.1em;color:#9ca3af;text-transform:uppercase;margin-bottom:16px;">New Arrivals 2026</div>
+        <h1 style="font-size:48px;font-weight:700;color:white;line-height:1.1;letter-spacing:-0.02em;margin-bottom:20px;">Quality goods,<br>delivered fast.</h1>
+        <p style="font-size:16px;color:#9ca3af;line-height:1.6;margin-bottom:32px;">Handpicked products with real reviews, transparent pricing, and shipping you can track in real time.</p>
+        <div style="display:flex;gap:12px;">
+          <button class="btn-primary" style="padding:14px 28px;font-size:15px;">Shop Now</button>
+          <button class="btn-secondary" style="padding:14px 28px;font-size:15px;background:transparent;color:white;border-color:#374151;">View Categories</button>
+        </div>
+      </div>
+      <div style="width:420px;height:320px;background:#374151;border-radius:16px;display:flex;align-items:center;justify-content:center;color:#6b7280;font-size:14px;flex-shrink:0;">Hero Product Image</div>
+    </div>
+    <!-- Category strip -->
+    <div style="padding:32px 64px;border-bottom:1px solid #e5e7eb;">
+      <div style="font-size:12px;font-weight:600;letter-spacing:0.1em;color:#6b7280;text-transform:uppercase;margin-bottom:16px;">Shop by Category</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;">
+        <button style="padding:8px 20px;border:1px solid #e5e7eb;border-radius:9999px;font-size:13px;font-weight:500;color:#374151;background:white;cursor:pointer;">All Products</button>
+        <button style="padding:8px 20px;border:1px solid #111827;border-radius:9999px;font-size:13px;font-weight:500;color:white;background:#111827;cursor:pointer;">Electronics</button>
+        <button style="padding:8px 20px;border:1px solid #e5e7eb;border-radius:9999px;font-size:13px;font-weight:500;color:#374151;background:white;cursor:pointer;">Clothing</button>
+        <button style="padding:8px 20px;border:1px solid #e5e7eb;border-radius:9999px;font-size:13px;font-weight:500;color:#374151;background:white;cursor:pointer;">Home & Living</button>
+        <button style="padding:8px 20px;border:1px solid #e5e7eb;border-radius:9999px;font-size:13px;font-weight:500;color:#374151;background:white;cursor:pointer;">Accessories</button>
+      </div>
+    </div>
+    <!-- Featured products -->
+    <div style="padding:48px 64px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+        <h2 style="font-size:24px;font-weight:600;color:#111827;">Featured Products</h2>
+        <a href="#" style="font-size:14px;color:#2563eb;font-weight:500;text-decoration:none;">View all →</a>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:24px;">
+        <!-- Product card -->
+        <div style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;background:white;transition:box-shadow 0.15s;">
+          <div style="height:200px;background:#f9fafb;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:13px;position:relative;">
+            Product Image
+            <div style="position:absolute;top:10px;right:10px;"><span class="badge badge-lowstock">Only 3 left</span></div>
+          </div>
+          <div style="padding:16px;">
+            <div style="font-size:11px;font-weight:600;letter-spacing:0.08em;color:#9ca3af;text-transform:uppercase;margin-bottom:4px;">Electronics</div>
+            <div style="font-size:15px;font-weight:600;color:#111827;margin-bottom:6px;line-height:1.3;">Wireless Noise-Cancelling Headphones</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;">
+              <span class="stars">★★★★★</span>
+              <span style="font-size:12px;color:#6b7280;">(48)</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <span style="font-size:18px;font-weight:600;color:#111827;">$89.99</span>
+              <button class="btn-primary" style="padding:7px 14px;font-size:12px;">Add to Cart</button>
+            </div>
+          </div>
+        </div>
+        <div style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;background:white;">
+          <div style="height:200px;background:#f9fafb;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:13px;">Product Image</div>
+          <div style="padding:16px;">
+            <div style="font-size:11px;font-weight:600;letter-spacing:0.08em;color:#9ca3af;text-transform:uppercase;margin-bottom:4px;">Clothing</div>
+            <div style="font-size:15px;font-weight:600;color:#111827;margin-bottom:6px;line-height:1.3;">Premium Cotton Crew Neck Tee</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;">
+              <span class="stars">★★★★☆</span>
+              <span style="font-size:12px;color:#6b7280;">(23)</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <span style="font-size:18px;font-weight:600;color:#111827;">$34.99</span>
+              <button class="btn-primary" style="padding:7px 14px;font-size:12px;">Add to Cart</button>
+            </div>
+          </div>
+        </div>
+        <div style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;background:white;">
+          <div style="height:200px;background:#f9fafb;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:13px;position:relative;">
+            Product Image
+            <div style="position:absolute;top:10px;right:10px;"><span class="badge badge-outofstock">Out of Stock</span></div>
+          </div>
+          <div style="padding:16px;">
+            <div style="font-size:11px;font-weight:600;letter-spacing:0.08em;color:#9ca3af;text-transform:uppercase;margin-bottom:4px;">Home & Living</div>
+            <div style="font-size:15px;font-weight:600;color:#111827;margin-bottom:6px;line-height:1.3;">Ceramic Pour-Over Coffee Set</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;">
+              <span class="stars">★★★★★</span>
+              <span style="font-size:12px;color:#6b7280;">(91)</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <span style="font-size:18px;font-weight:600;color:#111827;">$54.99</span>
+              <button style="padding:7px 14px;font-size:12px;background:#f3f4f6;color:#9ca3af;border:none;border-radius:6px;cursor:not-allowed;">Out of Stock</button>
+            </div>
+          </div>
+        </div>
+        <div style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;background:white;">
+          <div style="height:200px;background:#f9fafb;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:13px;">Product Image</div>
+          <div style="padding:16px;">
+            <div style="font-size:11px;font-weight:600;letter-spacing:0.08em;color:#9ca3af;text-transform:uppercase;margin-bottom:4px;">Accessories</div>
+            <div style="font-size:15px;font-weight:600;color:#111827;margin-bottom:6px;line-height:1.3;">Minimalist Leather Wallet</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;">
+              <span class="stars">★★★★☆</span>
+              <span style="font-size:12px;color:#6b7280;">(17)</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <span style="font-size:18px;font-weight:600;color:#111827;">$44.99</span>
+              <button class="btn-primary" style="padding:7px 14px;font-size:12px;">Add to Cart</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Footer -->
+    <div style="background:#111827;padding:40px 64px;display:flex;justify-content:space-between;align-items:center;">
+      <div class="logo" style="color:white;">simple<span style="color:#2563eb">.</span>store</div>
+      <div style="font-size:13px;color:#6b7280;">© 2026 simple-ecommerce. All rights reserved.</div>
+      <div style="display:flex;gap:24px;">
+        <a href="#" style="font-size:13px;color:#6b7280;text-decoration:none;">Privacy</a>
+        <a href="#" style="font-size:13px;color:#6b7280;text-decoration:none;">Terms</a>
+        <a href="#" style="font-size:13px;color:#6b7280;text-decoration:none;">Contact</a>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- ===== SCREEN 2: PRODUCT CATALOG ===== -->
+<div id="screen-catalog" class="screen">
+  <div class="screen-label">Screen 2 — Product Catalog</div>
+  <div class="mockup">
+    <div class="mockup-label">PRODUCT CATALOG — Desktop with filters</div>
+    <div class="header">
+      <div class="logo">simple<span style="color:#2563eb">.</span>store</div>
+      <nav class="header-nav"><a href="#">Shop</a><a href="#" style="color:#111827;font-weight:600;">Categories</a><a href="#">About</a></nav>
+      <div class="header-actions">
+        <a href="#" style="font-size:14px;color:#6b7280;text-decoration:none;font-weight:500;">Sign in</a>
+        <button class="cart-btn">🛒 Cart <span class="cart-badge">2</span></button>
+      </div>
+    </div>
+    <!-- Breadcrumb -->
+    <div style="padding:12px 32px;border-bottom:1px solid #e5e7eb;font-size:13px;color:#6b7280;">
+      <a href="#" style="color:#6b7280;text-decoration:none;">Home</a> <span style="margin:0 8px;">›</span> <span style="color:#111827;font-weight:500;">All Products</span>
+    </div>
+    <div style="display:flex;min-height:600px;">
+      <!-- Sidebar filters -->
+      <div style="width:240px;flex-shrink:0;border-right:1px solid #e5e7eb;padding:24px;">
+        <div style="font-size:13px;font-weight:600;color:#111827;margin-bottom:16px;">CATEGORIES</div>
+        <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:24px;">
+          <div style="padding:8px 12px;border-radius:6px;font-size:14px;font-weight:500;background:#111827;color:white;cursor:pointer;">All Products <span style="float:right;font-size:12px;color:#9ca3af;">124</span></div>
+          <div style="padding:8px 12px;border-radius:6px;font-size:14px;color:#374151;cursor:pointer;">Electronics <span style="float:right;font-size:12px;color:#9ca3af;">38</span></div>
+          <div style="padding:8px 12px;border-radius:6px;font-size:14px;color:#374151;cursor:pointer;">Clothing <span style="float:right;font-size:12px;color:#9ca3af;">45</span></div>
+          <div style="padding:8px 12px;border-radius:6px;font-size:14px;color:#374151;cursor:pointer;">Home & Living <span style="float:right;font-size:12px;color:#9ca3af;">27</span></div>
+          <div style="padding:8px 12px;border-radius:6px;font-size:14px;color:#374151;cursor:pointer;">Accessories <span style="float:right;font-size:12px;color:#9ca3af;">14</span></div>
+        </div>
+        <div class="divider"></div>
+        <div style="font-size:13px;font-weight:600;color:#111827;margin-bottom:16px;">PRICE RANGE</div>
+        <div style="display:flex;gap:8px;margin-bottom:24px;">
+          <input class="input" placeholder="Min" style="width:80px;padding:8px 10px;">
+          <input class="input" placeholder="Max" style="width:80px;padding:8px 10px;">
+        </div>
+        <div class="divider"></div>
+        <div style="font-size:13px;font-weight:600;color:#111827;margin-bottom:16px;">AVAILABILITY</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <label style="display:flex;align-items:center;gap:8px;font-size:14px;color:#374151;cursor:pointer;"><input type="checkbox" checked> In Stock</label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:14px;color:#374151;cursor:pointer;"><input type="checkbox"> Out of Stock</label>
+        </div>
+      </div>
+      <!-- Main content -->
+      <div style="flex:1;padding:24px 32px;">
+        <!-- Search + sort bar -->
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+          <div style="flex:1;position:relative;">
+            <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#9ca3af;">🔍</span>
+            <input class="input" placeholder="Search products..." style="padding-left:36px;">
+          </div>
+          <select class="input" style="width:180px;">
+            <option>Sort: Featured</option>
+            <option>Price: Low to High</option>
+            <option>Price: High to Low</option>
+            <option>Newest First</option>
+            <option>Most Popular</option>
+          </select>
+        </div>
+        <!-- Active filters -->
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;">
+          <span style="font-size:12px;color:#6b7280;font-weight:500;">Active filters:</span>
+          <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:#eff6ff;color:#2563eb;border-radius:9999px;font-size:12px;font-weight:500;">All Products <span style="cursor:pointer;">×</span></span>
+          <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:#eff6ff;color:#2563eb;border-radius:9999px;font-size:12px;font-weight:500;">In Stock <span style="cursor:pointer;">×</span></span>
+        </div>
+        <div style="font-size:13px;color:#6b7280;margin-bottom:20px;">Showing 124 products</div>
+        <!-- Product grid -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;">
+          <!-- 6 product cards -->
+          <div style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;background:white;cursor:pointer;transition:box-shadow 0.15s;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.1)'" onmouseout="this.style.boxShadow='none'">
+            <div style="height:180px;background:#f9fafb;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:13px;position:relative;">
+              Product Image
+              <div style="position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;opacity:0;" class="quick-add">
+                <button class="btn-primary" style="padding:6px 16px;font-size:12px;">Quick Add</button>
+              </div>
+            </div>
+            <div style="padding:14px;">
+              <div style="font-size:11px;font-weight:600;letter-spacing:0.08em;color:#9ca3af;text-transform:uppercase;margin-bottom:3px;">Electronics</div>
+              <div style="font-size:14px;font-weight:600;color:#111827;margin-bottom:5px;line-height:1.3;">Wireless Headphones Pro</div>
+              <div style="display:flex;align-items:center;gap:4px;margin-bottom:10px;"><span class="stars" style="font-size:11px;">★★★★★</span><span style="font-size:11px;color:#6b7280;">(48)</span></div>
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <span style="font-size:16px;font-weight:600;">$89.99</span>
+                <span class="badge badge-instock" style="font-size:11px;">In Stock</span>
+              </div>
+            </div>
+          </div>
+          <div style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;background:white;cursor:pointer;">
+            <div style="height:180px;background:#f9fafb;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:13px;">Product Image</div>
+            <div style="padding:14px;">
+              <div style="font-size:11px;font-weight:600;letter-spacing:0.08em;color:#9ca3af;text-transform:uppercase;margin-bottom:3px;">Clothing</div>
+              <div style="font-size:14px;font-weight:600;color:#111827;margin-bottom:5px;line-height:1.3;">Premium Cotton Tee</div>
+              <div style="display:flex;align-items:center;gap:4px;margin-bottom:10px;"><span class="stars" style="font-size:11px;">★★★★☆</span><span style="font-size:11px;color:#6b7280;">(23)</span></div>
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <span style="font-size:16px;font-weight:600;">$34.99</span>
+                <span class="badge badge-instock" style="font-size:11px;">In Stock</span>
+              </div>
+            </div>
+          </div>
+          <div style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;background:white;cursor:pointer;">
+            <div style="height:180px;background:#f9fafb;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:13px;">Product Image</div>
+            <div style="padding:14px;">
+              <div style="font-size:11px;font-weight:600;letter-spacing:0.08em;color:#9ca3af;text-transform:uppercase;margin-bottom:3px;">Home & Living</div>
+              <div style="font-size:14px;font-weight:600;color:#111827;margin-bottom:5px;line-height:1.3;">Ceramic Coffee Set</div>
+              <div style="display:flex;align-items:center;gap:4px;margin-bottom:10px;"><span class="stars" style="font-size:11px;">★★★★★</span><span style="font-size:11px;color:#6b7280;">(91)</span></div>
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <span style="font-size:16px;font-weight:600;">$54.99</span>
+                <span class="badge badge-lowstock" style="font-size:11px;">Only 2 left</span>
+              </div>
+            </div>
+          </div>
+          <div style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;background:white;cursor:pointer;">
+            <div style="height:180px;background:#f9fafb;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:13px;">Product Image</div>
+            <div style="padding:14px;">
+              <div style="font-size:11px;font-weight:600;letter-spacing:0.08em;color:#9ca3af;text-transform:uppercase;margin-bottom:3px;">Accessories</div>
+              <div style="font-size:14px;font-weight:600;color:#111827;margin-bottom:5px;line-height:1.3;">Minimalist Leather Wallet</div>
+              <div style="display:flex;align-items:center;gap:4px;margin-bottom:10px;"><span class="stars" style="font-size:11px;">★★★★☆</span><span style="font-size:11px;color:#6b7280;">(17)</span></div>
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <span style="font-size:16px;font-weight:600;">$44.99</span>
+                <span class="badge badge-instock" style="font-size:11px;">In Stock</span>
+              </div>
+            </div>
+          </div>
+          <div style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;background:white;cursor:pointer;">
+            <div style="height:180px;background:#f9fafb;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:13px;">Product Image</div>
+            <div style="padding:14px;">
+              <div style="font-size:11px;font-weight:600;letter-spacing:0.08em;color:#9ca3af;text-transform:uppercase;margin-bottom:3px;">Electronics</div>
+              <div style="font-size:14px;font-weight:600;color:#111827;margin-bottom:5px;line-height:1.3;">USB-C Hub 7-in-1</div>
+              <div style="display:flex;align-items:center;gap:4px;margin-bottom:10px;"><span class="stars" style="font-size:11px;">★★★★★</span><span style="font-size:11px;color:#6b7280;">(62)</span></div>
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <span style="font-size:16px;font-weight:600;">$49.99</span>
+                <span class="badge badge-instock" style="font-size:11px;">In Stock</span>
+              </div>
+            </div>
+          </div>
+          <div style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;background:white;cursor:pointer;">
+            <div style="height:180px;background:#f9fafb;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:13px;">Product Image</div>
+            <div style="padding:14px;">
+              <div style="font-size:11px;font-weight:600;letter-spacing:0.08em;color:#9ca3af;text-transform:uppercase;margin-bottom:3px;">Clothing</div>
+              <div style="font-size:14px;font-weight:600;color:#111827;margin-bottom:5px;line-height:1.3;">Merino Wool Sweater</div>
+              <div style="display:flex;align-items:center;gap:4px;margin-bottom:10px;"><span class="stars" style="font-size:11px;">★★★★☆</span><span style="font-size:11px;color:#6b7280;">(34)</span></div>
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <span style="font-size:16px;font-weight:600;">$79.99</span>
+                <span class="badge badge-instock" style="font-size:11px;">In Stock</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Pagination -->
+        <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:32px;">
+          <button style="padding:8px 12px;border:1px solid #e5e7eb;border-radius:6px;background:white;color:#6b7280;font-size:13px;cursor:pointer;">← Prev</button>
+          <button style="padding:8px 12px;border:1px solid #111827;border-radius:6px;background:#111827;color:white;font-size:13px;cursor:pointer;">1</button>
+          <button style="padding:8px 12px;border:1px solid #e5e7eb;border-radius:6px;background:white;color:#374151;font-size:13px;cursor:pointer;">2</button>
+          <button style="padding:8px 12px;border:1px solid #e5e7eb;border-radius:6px;background:white;color:#374151;font-size:13px;cursor:pointer;">3</button>
+          <span style="color:#9ca3af;font-size:13px;">...</span>
+          <button style="padding:8px 12px;border:1px solid #e5e7eb;border-radius:6px;background:white;color:#374151;font-size:13px;cursor:pointer;">11</button>
+          <button style="padding:8px 12px;border:1px solid #e5e7eb;border-radius:6px;background:white;color:#6b7280;font-size:13px;cursor:pointer;">Next →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- ===== SCREEN 3: PRODUCT DETAIL ===== -->
+<div id="screen-product" class="screen">
+  <div class="screen-label">Screen 3 — Product Detail Page</div>
+  <div class="mockup">
+    <div class="mockup-label">PRODUCT DETAIL — Desktop split layout</div>
+    <div class="header">
+      <div class="logo">simple<span style="color:#2563eb">.</span>store</div>
+      <nav class="header-nav"><a href="#">Shop</a><a href="#">Categories</a><a href="#">About</a></nav>
+      <div class="header-actions">
+        <a href="#" style="font-size:14px;color:#6b7280;text-decoration:none;font-weight:500;">Sign in</a>
+        <button class="cart-btn">🛒 Cart <span class="cart-badge">2</span></button>
+      </div>
+    </div>
+    <div style="padding:12px 32px;border-bottom:1px solid #e5e7eb;font-size:13px;color:#6b7280;">
+      <a href="#" style="color:#6b7280;text-decoration:none;">Home</a> <span style="margin:0 8px;">›</span>
+      <a href="#" style="color:#6b7280;text-decoration:none;">Electronics</a> <span style="margin:0 8px;">›</span>
+      <span style="color:#111827;font-weight:500;">Wireless Noise-Cancelling Headphones</span>
+    </div>
+    <div style="display:flex;gap:48px;padding:40px 48px;align-items:flex-start;">
+      <!-- Image gallery (60%) -->
+      <div style="flex:0 0 55%;">
+        <div style="height:420px;background:#f9fafb;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:14px;margin-bottom:12px;border:1px solid #e5e7eb;">Main Product Image (click to zoom)</div>
+        <div style="display:flex;gap:8px;">
+          <div style="width:80px;height:80px;background:#111827;border-radius:6px;border:2px solid #111827;cursor:pointer;"></div>
+          <div style="width:80px;height:80px;background:#f9fafb;border-radius:6px;border:1px solid #e5e7eb;cursor:pointer;"></div>
+          <div style="width:80px;height:80px;background:#f9fafb;border-radius:6px;border:1px solid #e5e7eb;cursor:pointer;"></div>
+          <div style="width:80px;height:80px;background:#f9fafb;border-radius:6px;border:1px solid #e5e7eb;cursor:pointer;"></div>
+        </div>
+      </div>
+      <!-- Purchase panel (40%) -->
+      <div style="flex:1;position:sticky;top:80px;">
+        <div style="font-size:12px;font-weight:600;letter-spacing:0.08em;color:#9ca3af;text-transform:uppercase;margin-bottom:8px;">Electronics</div>
+        <h1 style="font-size:28px;font-weight:700;color:#111827;line-height:1.2;margin-bottom:12px;letter-spacing:-0.02em;">Wireless Noise-Cancelling Headphones</h1>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+          <span class="stars" style="font-size:16px;">★★★★★</span>
+          <span style="font-size:14px;color:#2563eb;font-weight:500;text-decoration:underline;cursor:pointer;">48 reviews</span>
+        </div>
+        <div style="font-size:32px;font-weight:700;color:#111827;margin-bottom:8px;">$89.99</div>
+        <div style="margin-bottom:20px;"><span class="badge badge-lowstock" style="font-size:13px;padding:4px 12px;">⚡ Only 3 left in stock</span></div>
+        <p style="font-size:14px;color:#6b7280;line-height:1.6;margin-bottom:24px;">Premium wireless headphones with active noise cancellation, 30-hour battery life, and studio-quality sound. Perfect for work, travel, and everyday listening.</p>
+        <div class="divider"></div>
+        <div style="margin-bottom:20px;">
+          <div style="font-size:13px;font-weight:600;color:#374151;margin-bottom:10px;">COLOR</div>
+          <div style="display:flex;gap:8px;">
+            <button style="padding:8px 16px;border:2px solid #111827;border-radius:6px;font-size:13px;font-weight:500;background:#111827;color:white;cursor:pointer;">Midnight Black</button>
+            <button style="padding:8px 16px;border:1px solid #e5e7eb;border-radius:6px;font-size:13px;font-weight:500;background:white;color:#374151;cursor:pointer;">Pearl White</button>
+            <button style="padding:8px 16px;border:1px solid #e5e7eb;border-radius:6px;font-size:13px;font-weight:500;background:white;color:#374151;cursor:pointer;">Navy Blue</button>
+          </div>
+        </div>
+        <button class="btn-primary" style="width:100%;padding:14px;font-size:15px;margin-bottom:12px;">Add to Cart</button>
+        <div style="display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;color:#9ca3af;margin-bottom:20px;">
+          <span>🔒</span> Secure checkout via Stripe
+        </div>
+        <div style="background:#f9fafb;border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#374151;"><span>🚚</span> Free shipping on orders over $50</div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#374151;"><span>📦</span> Usually ships in 1–2 business days</div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#374151;"><span>↩️</span> 30-day return policy</div>
+        </div>
+      </div>
+    </div>
+    <!-- Reviews section -->
+    <div style="padding:0 48px 48px;">
+      <div class="divider"></div>
+      <h2 style="font-size:22px;font-weight:600;margin-bottom:24px;">Customer Reviews</h2>
+      <div style="display:flex;gap:48px;align-items:flex-start;margin-bottom:32px;">
+        <div style="text-align:center;">
+          <div style="font-size:56px;font-weight:700;color:#111827;line-height:1;">4.9</div>
+          <div class="stars" style="font-size:20px;margin:4px 0;">★★★★★</div>
+          <div style="font-size:13px;color:#6b7280;">48 reviews</div>
+        </div>
+        <div style="flex:1;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;"><span style="font-size:13px;color:#374151;width:20px;">5★</span><div style="flex:1;height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden;"><div style="width:85%;height:100%;background:#f59e0b;border-radius:4px;"></div></div><span style="font-size:13px;color:#6b7280;width:30px;">41</span></div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;"><span style="font-size:13px;color:#374151;width:20px;">4★</span><div style="flex:1;height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden;"><div style="width:10%;height:100%;background:#f59e0b;border-radius:4px;"></div></div><span style="font-size:13px;color:#6b7280;width:30px;">5</span></div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;"><span style="font-size:13px;color:#374151;width:20px;">3★</span><div style="flex:1;height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden;"><div style="width:3%;height:100%;background:#f59e0b;border-radius:4px;"></div></div><span style="font-size:13px;color:#6b7280;width:30px;">2</span></div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;"><span style="font-size:13px;color:#374151;width:20px;">2★</span><div style="flex:1;height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden;"><div style="width:0%;height:100%;background:#f59e0b;border-radius:4px;"></div></div><span style="font-size:13px;color:#6b7280;width:30px;">0</span></div>
+          <div style="display:flex;align-items:center;gap:10px;"><span style="font-size:13px;color:#374151;width:20px;">1★</span><div style="flex:1;height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden;"><div style="width:0%;height:100%;background:#f59e0b;border-radius:4px;"></div></div><span style="font-size:13px;color:#6b7280;width:30px;">0</span></div>
+        </div>
+      </div>
+      <!-- Individual reviews -->
+      <div style="display:flex;flex-direction:column;gap:20px;">
+        <div style="padding:20px;border:1px solid #e5e7eb;border-radius:8px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:36px;height:36px;background:#111827;border-radius:9999px;display:flex;align-items:center;justify-content:center;color:white;font-size:13px;font-weight:600;">P</div>
+              <div><div style="font-size:14px;font-weight:600;color:#111827;">Priya S.</div><div style="font-size:12px;color:#9ca3af;">Verified Purchase</div></div>
+            </div>
+            <span style="font-size:12px;color:#9ca3af;">May 1, 2026</span>
+          </div>
+          <div class="stars" style="font-size:14px;margin-bottom:8px;">★★★★★</div>
+          <p style="font-size:14px;color:#374151;line-height:1.6;">Absolutely love these headphones. The noise cancellation is incredible — I can finally focus at work. Battery lasts all day easily. Highly recommend!</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SCREEN 4: CART ===== -->
+<div id="screen-cart" class="screen">
+  <div class="screen-label">Screen 4 — Shopping Cart</div>
+  <div class="mockup">
+    <div class="mockup-label">CART PAGE — Desktop</div>
+    <div class="header">
+      <div class="logo">simple<span style="color:#2563eb">.</span>store</div>
+      <nav class="header-nav"><a href="#">Shop</a><a href="#">Categories</a></nav>
+      <div class="header-actions">
+        <a href="#" style="font-size:14px;color:#6b7280;text-decoration:none;font-weight:500;">Sign in</a>
+        <button class="cart-btn">🛒 Cart <span class="cart-badge">2</span></button>
+      </div>
+    </div>
+    <div style="max-width:900px;margin:0 auto;padding:40px 32px;">
+      <h1 style="font-size:28px;font-weight:700;margin-bottom:32px;">Your Cart <span style="font-size:18px;font-weight:400;color:#6b7280;">(2 items)</span></h1>
+      <div style="display:flex;gap:32px;align-items:flex-start;">
+        <!-- Cart items -->
+        <div style="flex:1;">
+          <!-- Item 1 -->
+          <div style="display:flex;gap:16px;padding:20px 0;border-bottom:1px solid #e5e7eb;align-items:center;">
+            <div style="width:80px;height:80px;background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:11px;">Image</div>
+            <div style="flex:1;">
+              <div style="font-size:15px;font-weight:600;color:#111827;margin-bottom:4px;">Wireless Noise-Cancelling Headphones</div>
+              <div style="font-size:13px;color:#6b7280;margin-bottom:8px;">Color: Midnight Black</div>
+              <div style="display:flex;align-items:center;gap:12px;">
+                <div style="display:flex;align-items:center;border:1px solid #e5e7eb;border-radius:6px;overflow:hidden;">
+                  <button style="padding:6px 12px;background:white;border:none;cursor:pointer;font-size:16px;color:#374151;">−</button>
+                  <span style="padding:6px 14px;font-size:14px;font-weight:500;border-left:1px solid #e5e7eb;border-right:1px solid #e5e7eb;">1</span>
+                  <button style="padding:6px 12px;background:white;border:none;cursor:pointer;font-size:16px;color:#374151;">+</button>
+                </div>
+                <button style="font-size:13px;color:#dc2626;background:none;border:none;cursor:pointer;font-weight:500;">Remove</button>
+              </div>
+            </div>
+            <div style="font-size:18px;font-weight:600;color:#111827;">$89.99</div>
+          </div>
+          <!-- Item 2 -->
+          <div style="display:flex;gap:16px;padding:20px 0;border-bottom:1px solid #e5e7eb;align-items:center;">
+            <div style="width:80px;height:80px;background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:11px;">Image</div>
+            <div style="flex:1;">
+              <div style="font-size:15px;font-weight:600;color:#111827;margin-bottom:4px;">Minimalist Leather Wallet</div>
+              <div style="font-size:13px;color:#6b7280;margin-bottom:8px;">Color: Brown</div>
+              <div style="display:flex;align-items:center;gap:12px;">
+                <div style="display:flex;align-items:center;border:1px solid #e5e7eb;border-radius:6px;overflow:hidden;">
+                  <button style="padding:6px 12px;background:white;border:none;cursor:pointer;font-size:16px;color:#374151;">−</button>
+                  <span style="padding:6px 14px;font-size:14px;font-weight:500;border-left:1px solid #e5e7eb;border-right:1px solid #e5e7eb;">2</span>
+                  <button style="padding:6px 12px;background:white;border:none;cursor:pointer;font-size:16px;color:#374151;">+</button>
+                </div>
+                <button style="font-size:13px;color:#dc2626;background:none;border:none;cursor:pointer;font-weight:500;">Remove</button>
+              </div>
+            </div>
+            <div style="font-size:18px;font-weight:600;color:#111827;">$89.98</div>
+          </div>
+          <div style="padding-top:16px;">
+            <a href="#" style="font-size:14px;color:#2563eb;font-weight:500;text-decoration:none;">← Continue Shopping</a>
+          </div>
+        </div>
+        <!-- Order summary -->
+        <div style="width:300px;flex-shrink:0;background:#f9fafb;border-radius:8px;padding:24px;border:1px solid #e5e7eb;">
+          <h3 style="font-size:16px;font-weight:600;margin-bottom:20px;">Order Summary</h3>
+          <div style="display:flex;justify-content:space-between;margin-bottom:10px;font-size:14px;"><span style="color:#6b7280;">Subtotal (3 items)</span><span style="font-weight:500;">$179.97</span></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:10px;font-size:14px;"><span style="color:#6b7280;">Shipping</span><span style="color:#16a34a;font-weight:500;">Free</span></div>
+          <div class="divider"></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:20px;font-size:16px;font-weight:700;"><span>Total</span><span>$179.97</span></div>
+          <button class="btn-primary" style="width:100%;padding:14px;font-size:15px;">Proceed to Checkout</button>
+          <div style="text-align:center;margin-top:12px;font-size:12px;color:#9ca3af;">🔒 Secure checkout via Stripe</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- ===== SCREEN 5: CHECKOUT ===== -->
+<div id="screen-checkout" class="screen">
+  <div class="screen-label">Screen 5 — Checkout (3-step)</div>
+  <div class="mockup">
+    <div class="mockup-label">CHECKOUT — Step 2: Payment (Desktop)</div>
+    <div class="header">
+      <div class="logo">simple<span style="color:#2563eb">.</span>store</div>
+      <div style="font-size:13px;color:#9ca3af;">🔒 Secure Checkout</div>
+      <div style="width:120px;"></div>
+    </div>
+    <!-- Progress indicator -->
+    <div style="padding:24px 48px;border-bottom:1px solid #e5e7eb;">
+      <div style="display:flex;align-items:center;justify-content:center;gap:0;max-width:500px;margin:0 auto;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:28px;height:28px;border-radius:9999px;background:#16a34a;display:flex;align-items:center;justify-content:center;color:white;font-size:12px;font-weight:700;">✓</div>
+          <span style="font-size:13px;font-weight:600;color:#16a34a;">Shipping</span>
+        </div>
+        <div style="flex:1;height:2px;background:#16a34a;margin:0 12px;max-width:80px;"></div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:28px;height:28px;border-radius:9999px;background:#111827;display:flex;align-items:center;justify-content:center;color:white;font-size:12px;font-weight:700;">2</div>
+          <span style="font-size:13px;font-weight:600;color:#111827;">Payment</span>
+        </div>
+        <div style="flex:1;height:2px;background:#e5e7eb;margin:0 12px;max-width:80px;"></div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:28px;height:28px;border-radius:9999px;background:#e5e7eb;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:12px;font-weight:700;">3</div>
+          <span style="font-size:13px;font-weight:500;color:#9ca3af;">Confirm</span>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:40px;padding:40px 48px;max-width:960px;margin:0 auto;">
+      <!-- Payment form -->
+      <div style="flex:1;">
+        <h2 style="font-size:20px;font-weight:600;margin-bottom:24px;">Payment Details</h2>
+        <!-- Shipping summary (collapsed) -->
+        <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:16px;margin-bottom:24px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <div style="font-size:12px;font-weight:600;letter-spacing:0.06em;color:#9ca3af;text-transform:uppercase;margin-bottom:4px;">Shipping to</div>
+              <div style="font-size:14px;color:#374151;">Priya Sharma — 123 Main St, Mumbai 400001</div>
+            </div>
+            <a href="#" style="font-size:13px;color:#2563eb;font-weight:500;text-decoration:none;">Edit</a>
+          </div>
+        </div>
+        <!-- Stripe Elements placeholder -->
+        <div style="border:1px solid #e5e7eb;border-radius:8px;padding:20px;margin-bottom:20px;background:white;">
+          <div style="font-size:13px;font-weight:600;color:#374151;margin-bottom:12px;">Card Information</div>
+          <div style="border:1px solid #e5e7eb;border-radius:6px;padding:12px 14px;background:#f9fafb;font-size:14px;color:#9ca3af;margin-bottom:10px;">1234 5678 9012 3456</div>
+          <div style="display:flex;gap:10px;">
+            <div style="flex:1;border:1px solid #e5e7eb;border-radius:6px;padding:12px 14px;background:#f9fafb;font-size:14px;color:#9ca3af;">MM / YY</div>
+            <div style="flex:1;border:1px solid #e5e7eb;border-radius:6px;padding:12px 14px;background:#f9fafb;font-size:14px;color:#9ca3af;">CVC</div>
+          </div>
+          <div style="margin-top:10px;font-size:11px;color:#9ca3af;display:flex;align-items:center;gap:4px;">🔒 Powered by Stripe — your card details are encrypted and never stored</div>
+        </div>
+        <!-- Error state example -->
+        <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:14px;margin-bottom:20px;display:flex;align-items:flex-start;gap:10px;">
+          <span style="color:#dc2626;font-size:16px;flex-shrink:0;">⚠️</span>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:#dc2626;margin-bottom:2px;">Card declined</div>
+            <div style="font-size:13px;color:#7f1d1d;">Your card was declined. Please check your card details or try a different payment method.</div>
+          </div>
+        </div>
+        <button class="btn-primary" style="width:100%;padding:16px;font-size:16px;font-weight:600;">Place Order — $179.97</button>
+        <div style="text-align:center;margin-top:12px;font-size:12px;color:#9ca3af;">By placing your order you agree to our Terms of Service</div>
+      </div>
+      <!-- Order summary sidebar -->
+      <div style="width:280px;flex-shrink:0;">
+        <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:20px;">
+          <h3 style="font-size:15px;font-weight:600;margin-bottom:16px;">Order Summary</h3>
+          <div style="display:flex;gap:12px;margin-bottom:12px;align-items:center;">
+            <div style="width:48px;height:48px;background:#e5e7eb;border-radius:6px;flex-shrink:0;"></div>
+            <div style="flex:1;"><div style="font-size:13px;font-weight:500;color:#111827;line-height:1.3;">Wireless Headphones Pro</div><div style="font-size:12px;color:#6b7280;">Qty: 1</div></div>
+            <div style="font-size:13px;font-weight:600;">$89.99</div>
+          </div>
+          <div style="display:flex;gap:12px;margin-bottom:16px;align-items:center;">
+            <div style="width:48px;height:48px;background:#e5e7eb;border-radius:6px;flex-shrink:0;"></div>
+            <div style="flex:1;"><div style="font-size:13px;font-weight:500;color:#111827;line-height:1.3;">Minimalist Leather Wallet</div><div style="font-size:12px;color:#6b7280;">Qty: 2</div></div>
+            <div style="font-size:13px;font-weight:600;">$89.98</div>
+          </div>
+          <div class="divider"></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px;"><span style="color:#6b7280;">Subtotal</span><span>$179.97</span></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:12px;font-size:13px;"><span style="color:#6b7280;">Shipping</span><span style="color:#16a34a;">Free</span></div>
+          <div class="divider"></div>
+          <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:700;"><span>Total</span><span>$179.97</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SCREEN 6: ORDER CONFIRMATION ===== -->
+<div id="screen-confirmation" class="screen">
+  <div class="screen-label">Screen 6 — Order Confirmation</div>
+  <div class="mockup">
+    <div class="mockup-label">ORDER CONFIRMATION — The payoff moment</div>
+    <div class="header">
+      <div class="logo">simple<span style="color:#2563eb">.</span>store</div>
+      <nav class="header-nav"><a href="#">Shop</a><a href="#">My Orders</a></nav>
+      <div class="header-actions"><button class="cart-btn">🛒 Cart <span class="cart-badge">0</span></button></div>
+    </div>
+    <div style="max-width:600px;margin:0 auto;padding:60px 32px;text-align:center;">
+      <div style="width:72px;height:72px;background:#f0fdf4;border-radius:9999px;display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 20px;">✅</div>
+      <h1 style="font-size:32px;font-weight:700;color:#111827;margin-bottom:8px;letter-spacing:-0.02em;">Order Confirmed!</h1>
+      <p style="font-size:16px;color:#6b7280;margin-bottom:32px;">Thank you, Priya. Your order has been placed and is being processed.</p>
+      <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:28px;text-align:left;margin-bottom:32px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+          <div>
+            <div style="font-size:12px;font-weight:600;letter-spacing:0.08em;color:#9ca3af;text-transform:uppercase;margin-bottom:4px;">Order Number</div>
+            <div style="font-size:24px;font-weight:700;color:#111827;">#ORD-2026-00847</div>
+          </div>
+          <span class="badge badge-processing" style="font-size:13px;padding:6px 14px;">Processing</span>
+        </div>
+        <div class="divider"></div>
+        <div style="display:flex;gap:12px;margin-bottom:12px;align-items:center;">
+          <div style="width:48px;height:48px;background:#e5e7eb;border-radius:6px;flex-shrink:0;"></div>
+          <div style="flex:1;"><div style="font-size:14px;font-weight:500;">Wireless Headphones Pro</div><div style="font-size:12px;color:#6b7280;">Qty: 1 · Midnight Black</div></div>
+          <div style="font-size:14px;font-weight:600;">$89.99</div>
+        </div>
+        <div style="display:flex;gap:12px;margin-bottom:16px;align-items:center;">
+          <div style="width:48px;height:48px;background:#e5e7eb;border-radius:6px;flex-shrink:0;"></div>
+          <div style="flex:1;"><div style="font-size:14px;font-weight:500;">Minimalist Leather Wallet</div><div style="font-size:12px;color:#6b7280;">Qty: 2 · Brown</div></div>
+          <div style="font-size:14px;font-weight:600;">$89.98</div>
+        </div>
+        <div class="divider"></div>
+        <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:700;margin-bottom:16px;"><span>Total Paid</span><span>$179.97</span></div>
+        <div style="background:#eff6ff;border-radius:8px;padding:14px;">
+          <div style="font-size:13px;font-weight:600;color:#1d4ed8;margin-bottom:4px;">📧 Confirmation email sent</div>
+          <div style="font-size:13px;color:#3b82f6;">A confirmation has been sent to priya@example.com</div>
+        </div>
+      </div>
+      <!-- What happens next -->
+      <div style="text-align:left;margin-bottom:32px;">
+        <h3 style="font-size:16px;font-weight:600;margin-bottom:16px;">What happens next?</h3>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <div style="width:28px;height:28px;border-radius:9999px;background:#111827;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">1</div>
+            <div><div style="font-size:14px;font-weight:500;color:#111827;">Order Processing</div><div style="font-size:13px;color:#6b7280;">We're preparing your items for shipment (1–2 business days)</div></div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <div style="width:28px;height:28px;border-radius:9999px;background:#e5e7eb;color:#6b7280;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">2</div>
+            <div><div style="font-size:14px;font-weight:500;color:#374151;">Shipping Notification</div><div style="font-size:13px;color:#6b7280;">You'll receive an email with tracking info when your order ships</div></div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <div style="width:28px;height:28px;border-radius:9999px;background:#e5e7eb;color:#6b7280;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">3</div>
+            <div><div style="font-size:14px;font-weight:500;color:#374151;">Delivery</div><div style="font-size:13px;color:#6b7280;">Estimated delivery in 3–5 business days</div></div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;justify-content:center;">
+        <a href="#" style="padding:12px 24px;background:#111827;color:white;border-radius:6px;font-size:14px;font-weight:500;text-decoration:none;">Track My Order</a>
+        <a href="#" style="padding:12px 24px;background:white;color:#374151;border-radius:6px;font-size:14px;font-weight:500;text-decoration:none;border:1px solid #e5e7eb;">Continue Shopping</a>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- ===== SCREEN 7: ORDER HISTORY ===== -->
+<div id="screen-orders" class="screen">
+  <div class="screen-label">Screen 7 — Order History & Order Detail</div>
+  <div class="mockup">
+    <div class="mockup-label">ORDER HISTORY + ORDER DETAIL with status timeline</div>
+    <div class="header">
+      <div class="logo">simple<span style="color:#2563eb">.</span>store</div>
+      <nav class="header-nav"><a href="#">Shop</a><a href="#" style="color:#111827;font-weight:600;">My Orders</a><a href="#">Profile</a></nav>
+      <div class="header-actions"><button class="cart-btn">🛒 Cart <span class="cart-badge">0</span></button></div>
+    </div>
+    <div style="display:flex;gap:0;min-height:600px;">
+      <!-- Order list -->
+      <div style="width:380px;border-right:1px solid #e5e7eb;padding:24px;">
+        <h2 style="font-size:20px;font-weight:600;margin-bottom:20px;">Order History</h2>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <!-- Active order -->
+          <div style="border:2px solid #2563eb;border-radius:8px;padding:16px;cursor:pointer;background:#eff6ff;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+              <div style="font-size:14px;font-weight:600;color:#111827;">#ORD-2026-00847</div>
+              <span class="badge badge-processing">Processing</span>
+            </div>
+            <div style="font-size:13px;color:#6b7280;margin-bottom:4px;">May 4, 2026 · 3 items</div>
+            <div style="font-size:15px;font-weight:600;color:#111827;">$179.97</div>
+          </div>
+          <div style="border:1px solid #e5e7eb;border-radius:8px;padding:16px;cursor:pointer;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+              <div style="font-size:14px;font-weight:600;color:#111827;">#ORD-2026-00612</div>
+              <span class="badge badge-delivered">Delivered</span>
+            </div>
+            <div style="font-size:13px;color:#6b7280;margin-bottom:4px;">Apr 18, 2026 · 1 item</div>
+            <div style="font-size:15px;font-weight:600;color:#111827;">$54.99</div>
+          </div>
+          <div style="border:1px solid #e5e7eb;border-radius:8px;padding:16px;cursor:pointer;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+              <div style="font-size:14px;font-weight:600;color:#111827;">#ORD-2026-00401</div>
+              <span class="badge badge-delivered">Delivered</span>
+            </div>
+            <div style="font-size:13px;color:#6b7280;margin-bottom:4px;">Mar 29, 2026 · 2 items</div>
+            <div style="font-size:15px;font-weight:600;color:#111827;">$124.98</div>
+          </div>
+        </div>
+      </div>
+      <!-- Order detail -->
+      <div style="flex:1;padding:24px 32px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+          <div>
+            <h2 style="font-size:20px;font-weight:600;color:#111827;">Order #ORD-2026-00847</h2>
+            <div style="font-size:13px;color:#6b7280;margin-top:4px;">Placed on May 4, 2026</div>
+          </div>
+          <span class="badge badge-processing" style="font-size:13px;padding:6px 14px;">Processing</span>
+        </div>
+        <!-- Status timeline -->
+        <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:24px;margin-bottom:24px;">
+          <h3 style="font-size:14px;font-weight:600;color:#374151;margin-bottom:20px;">Order Status</h3>
+          <div style="display:flex;flex-direction:column;gap:0;">
+            <!-- Step 1: Placed -->
+            <div style="display:flex;gap:16px;align-items:flex-start;">
+              <div style="display:flex;flex-direction:column;align-items:center;">
+                <div style="width:32px;height:32px;border-radius:9999px;background:#16a34a;display:flex;align-items:center;justify-content:center;color:white;font-size:14px;flex-shrink:0;">✓</div>
+                <div style="width:2px;height:32px;background:#16a34a;"></div>
+              </div>
+              <div style="padding-top:4px;padding-bottom:20px;">
+                <div style="font-size:14px;font-weight:600;color:#111827;">Order Placed</div>
+                <div style="font-size:12px;color:#6b7280;">May 4, 2026 at 2:34 PM</div>
+              </div>
+            </div>
+            <!-- Step 2: Processing (active) -->
+            <div style="display:flex;gap:16px;align-items:flex-start;">
+              <div style="display:flex;flex-direction:column;align-items:center;">
+                <div style="width:32px;height:32px;border-radius:9999px;background:#2563eb;display:flex;align-items:center;justify-content:center;color:white;font-size:12px;font-weight:700;flex-shrink:0;box-shadow:0 0 0 4px #eff6ff;">2</div>
+                <div style="width:2px;height:32px;background:#e5e7eb;"></div>
+              </div>
+              <div style="padding-top:4px;padding-bottom:20px;">
+                <div style="font-size:14px;font-weight:600;color:#2563eb;">Processing</div>
+                <div style="font-size:12px;color:#6b7280;">Your order is being prepared for shipment</div>
+              </div>
+            </div>
+            <!-- Step 3: Shipped -->
+            <div style="display:flex;gap:16px;align-items:flex-start;">
+              <div style="display:flex;flex-direction:column;align-items:center;">
+                <div style="width:32px;height:32px;border-radius:9999px;background:#e5e7eb;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:12px;font-weight:700;flex-shrink:0;">3</div>
+                <div style="width:2px;height:32px;background:#e5e7eb;"></div>
+              </div>
+              <div style="padding-top:4px;padding-bottom:20px;">
+                <div style="font-size:14px;font-weight:500;color:#9ca3af;">Shipped</div>
+                <div style="font-size:12px;color:#9ca3af;">You'll receive a tracking number by email</div>
+              </div>
+            </div>
+            <!-- Step 4: Delivered -->
+            <div style="display:flex;gap:16px;align-items:flex-start;">
+              <div style="display:flex;flex-direction:column;align-items:center;">
+                <div style="width:32px;height:32px;border-radius:9999px;background:#e5e7eb;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:12px;font-weight:700;flex-shrink:0;">4</div>
+              </div>
+              <div style="padding-top:4px;">
+                <div style="font-size:14px;font-weight:500;color:#9ca3af;">Delivered</div>
+                <div style="font-size:12px;color:#9ca3af;">Estimated: May 9–11, 2026</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Items -->
+        <h3 style="font-size:15px;font-weight:600;margin-bottom:12px;">Items Ordered</h3>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
+          <div style="display:flex;gap:12px;align-items:center;padding:12px;border:1px solid #e5e7eb;border-radius:8px;">
+            <div style="width:48px;height:48px;background:#f9fafb;border-radius:6px;flex-shrink:0;"></div>
+            <div style="flex:1;"><div style="font-size:14px;font-weight:500;">Wireless Headphones Pro</div><div style="font-size:12px;color:#6b7280;">Qty: 1 · Midnight Black</div></div>
+            <div style="font-size:14px;font-weight:600;">$89.99</div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:center;padding:12px;border:1px solid #e5e7eb;border-radius:8px;">
+            <div style="width:48px;height:48px;background:#f9fafb;border-radius:6px;flex-shrink:0;"></div>
+            <div style="flex:1;"><div style="font-size:14px;font-weight:500;">Minimalist Leather Wallet</div><div style="font-size:12px;color:#6b7280;">Qty: 2 · Brown</div></div>
+            <div style="font-size:14px;font-weight:600;">$89.98</div>
+          </div>
+        </div>
+        <div style="background:#f9fafb;border-radius:8px;padding:16px;display:flex;justify-content:space-between;align-items:center;">
+          <div style="font-size:14px;color:#6b7280;">Shipping to: 123 Main St, Mumbai 400001</div>
+          <div style="font-size:16px;font-weight:700;">Total: $179.97</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SCREEN 8: ADMIN DASHBOARD ===== -->
+<div id="screen-admin" class="screen">
+  <div class="screen-label">Screen 8 — Admin Dashboard</div>
+  <div class="mockup">
+    <div class="mockup-label">ADMIN DASHBOARD — Shopify Admin-inspired layout</div>
+    <div style="display:flex;min-height:700px;">
+      <!-- Sidebar -->
+      <div style="width:240px;background:#111827;flex-shrink:0;padding:0;">
+        <div style="padding:20px 20px 16px;border-bottom:1px solid #1f2937;">
+          <div style="font-size:16px;font-weight:700;color:white;">simple<span style="color:#2563eb">.</span>store</div>
+          <div style="font-size:11px;color:#6b7280;margin-top:2px;">Admin Panel</div>
+        </div>
+        <nav style="padding:12px 8px;">
+          <div style="padding:10px 12px;border-radius:6px;background:#1f2937;color:white;font-size:14px;font-weight:500;display:flex;align-items:center;gap:10px;margin-bottom:2px;cursor:pointer;">
+            <span>📊</span> Dashboard
+          </div>
+          <div style="padding:10px 12px;border-radius:6px;color:#9ca3af;font-size:14px;font-weight:500;display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;cursor:pointer;">
+            <div style="display:flex;align-items:center;gap:10px;"><span>📦</span> Orders</div>
+            <span style="background:#2563eb;color:white;border-radius:9999px;font-size:11px;font-weight:700;padding:1px 7px;">3</span>
+          </div>
+          <div style="padding:10px 12px;border-radius:6px;color:#9ca3af;font-size:14px;font-weight:500;display:flex;align-items:center;gap:10px;margin-bottom:2px;cursor:pointer;">
+            <span>🛍️</span> Products
+          </div>
+          <div style="padding:10px 12px;border-radius:6px;color:#9ca3af;font-size:14px;font-weight:500;display:flex;align-items:center;gap:10px;margin-bottom:2px;cursor:pointer;">
+            <span>��</span> Customers
+          </div>
+          <div style="padding:10px 12px;border-radius:6px;color:#9ca3af;font-size:14px;font-weight:500;display:flex;align-items:center;gap:10px;cursor:pointer;">
+            <span>⚙️</span> Settings
+          </div>
+        </nav>
+        <div style="position:absolute;bottom:0;width:240px;padding:16px 20px;border-top:1px solid #1f2937;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:32px;height:32px;background:#374151;border-radius:9999px;display:flex;align-items:center;justify-content:center;color:white;font-size:13px;font-weight:600;">A</div>
+            <div><div style="font-size:13px;font-weight:500;color:white;">Aditya</div><div style="font-size:11px;color:#6b7280;">Admin</div></div>
+          </div>
+        </div>
+      </div>
+      <!-- Main content -->
+      <div style="flex:1;background:#f9fafb;padding:28px 32px;overflow:auto;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+          <div>
+            <h1 style="font-size:22px;font-weight:700;color:#111827;">Dashboard</h1>
+            <div style="font-size:13px;color:#6b7280;margin-top:2px;">Monday, May 4, 2026</div>
+          </div>
+          <!-- New order notification -->
+          <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 16px;display:flex;align-items:center;gap:8px;">
+            <span style="font-size:16px;">🔔</span>
+            <div><div style="font-size:13px;font-weight:600;color:#16a34a;">New order received!</div><div style="font-size:12px;color:#6b7280;">#ORD-2026-00847 · $179.97 · just now</div></div>
+          </div>
+        </div>
+        <!-- Stat cards -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;">
+          <div style="background:white;border:1px solid #e5e7eb;border-radius:8px;padding:20px;">
+            <div style="font-size:12px;font-weight:600;letter-spacing:0.06em;color:#9ca3af;text-transform:uppercase;margin-bottom:8px;">Today's Orders</div>
+            <div style="font-size:32px;font-weight:700;color:#111827;margin-bottom:4px;">7</div>
+            <div style="font-size:12px;color:#16a34a;font-weight:500;">↑ 3 from yesterday</div>
+          </div>
+          <div style="background:white;border:1px solid #e5e7eb;border-radius:8px;padding:20px;">
+            <div style="font-size:12px;font-weight:600;letter-spacing:0.06em;color:#9ca3af;text-transform:uppercase;margin-bottom:8px;">Total Revenue</div>
+            <div style="font-size:32px;font-weight:700;color:#111827;margin-bottom:4px;">$4,821</div>
+            <div style="font-size:12px;color:#16a34a;font-weight:500;">↑ 12% this month</div>
+          </div>
+          <div style="background:white;border:1px solid #e5e7eb;border-radius:8px;padding:20px;">
+            <div style="font-size:12px;font-weight:600;letter-spacing:0.06em;color:#9ca3af;text-transform:uppercase;margin-bottom:8px;">Pending Fulfillment</div>
+            <div style="font-size:32px;font-weight:700;color:#d97706;margin-bottom:4px;">3</div>
+            <div style="font-size:12px;color:#6b7280;">Needs attention</div>
+          </div>
+          <div style="background:white;border:1px solid #e5e7eb;border-radius:8px;padding:20px;">
+            <div style="font-size:12px;font-weight:600;letter-spacing:0.06em;color:#9ca3af;text-transform:uppercase;margin-bottom:8px;">Low Stock Items</div>
+            <div style="font-size:32px;font-weight:700;color:#dc2626;margin-bottom:4px;">2</div>
+            <div style="font-size:12px;color:#6b7280;">≤5 units remaining</div>
+          </div>
+        </div>
+        <!-- Recent orders table -->
+        <div style="background:white;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
+          <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
+            <h3 style="font-size:15px;font-weight:600;color:#111827;">Recent Orders</h3>
+            <a href="#" style="font-size:13px;color:#2563eb;font-weight:500;text-decoration:none;">View all orders →</a>
+          </div>
+          <table style="width:100%;border-collapse:collapse;">
+            <thead>
+              <tr style="background:#f9fafb;">
+                <th style="padding:10px 20px;text-align:left;font-size:11px;font-weight:600;letter-spacing:0.06em;color:#9ca3af;text-transform:uppercase;">Order</th>
+                <th style="padding:10px 20px;text-align:left;font-size:11px;font-weight:600;letter-spacing:0.06em;color:#9ca3af;text-transform:uppercase;">Customer</th>
+                <th style="padding:10px 20px;text-align:left;font-size:11px;font-weight:600;letter-spacing:0.06em;color:#9ca3af;text-transform:uppercase;">Date</th>
+                <th style="padding:10px 20px;text-align:left;font-size:11px;font-weight:600;letter-spacing:0.06em;color:#9ca3af;text-transform:uppercase;">Total</th>
+                <th style="padding:10px 20px;text-align:left;font-size:11px;font-weight:600;letter-spacing:0.06em;color:#9ca3af;text-transform:uppercase;">Status</th>
+                <th style="padding:10px 20px;text-align:left;font-size:11px;font-weight:600;letter-spacing:0.06em;color:#9ca3af;text-transform:uppercase;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-top:1px solid #e5e7eb;background:#eff6ff;">
+                <td style="padding:14px 20px;font-size:13px;font-weight:600;color:#2563eb;">#ORD-2026-00847</td>
+                <td style="padding:14px 20px;font-size:13px;color:#374151;">Priya Sharma</td>
+                <td style="padding:14px 20px;font-size:13px;color:#6b7280;">May 4, 2026</td>
+                <td style="padding:14px 20px;font-size:13px;font-weight:600;">$179.97</td>
+                <td style="padding:14px 20px;"><span class="badge badge-processing">Processing</span></td>
+                <td style="padding:14px 20px;"><a href="#" style="font-size:13px;color:#2563eb;font-weight:500;text-decoration:none;">View →</a></td>
+              </tr>
+              <tr style="border-top:1px solid #e5e7eb;">
+                <td style="padding:14px 20px;font-size:13px;font-weight:600;color:#374151;">#ORD-2026-00846</td>
+                <td style="padding:14px 20px;font-size:13px;color:#374151;">Rahul Mehta</td>
+                <td style="padding:14px 20px;font-size:13px;color:#6b7280;">May 4, 2026</td>
+                <td style="padding:14px 20px;font-size:13px;font-weight:600;">$89.99</td>
+                <td style="padding:14px 20px;"><span class="badge badge-pending">Pending</span></td>
+                <td style="padding:14px 20px;"><a href="#" style="font-size:13px;color:#2563eb;font-weight:500;text-decoration:none;">View →</a></td>
+              </tr>
+              <tr style="border-top:1px solid #e5e7eb;">
+                <td style="padding:14px 20px;font-size:13px;font-weight:600;color:#374151;">#ORD-2026-00845</td>
+                <td style="padding:14px 20px;font-size:13px;color:#374151;">Ananya Patel</td>
+                <td style="padding:14px 20px;font-size:13px;color:#6b7280;">May 3, 2026</td>
+                <td style="padding:14px 20px;font-size:13px;font-weight:600;">$124.98</td>
+                <td style="padding:14px 20px;"><span class="badge badge-shipped">Shipped</span></td>
+                <td style="padding:14px 20px;"><a href="#" style="font-size:13px;color:#2563eb;font-weight:500;text-decoration:none;">View →</a></td>
+              </tr>
+              <tr style="border-top:1px solid #e5e7eb;">
+                <td style="padding:14px 20px;font-size:13px;font-weight:600;color:#374151;">#ORD-2026-00844</td>
+                <td style="padding:14px 20px;font-size:13px;color:#374151;">Vikram Singh</td>
+                <td style="padding:14px 20px;font-size:13px;color:#6b7280;">May 3, 2026</td>
+                <td style="padding:14px 20px;font-size:13px;font-weight:600;">$44.99</td>
+                <td style="padding:14px 20px;"><span class="badge badge-delivered">Delivered</span></td>
+                <td style="padding:14px 20px;"><a href="#" style="font-size:13px;color:#2563eb;font-weight:500;text-decoration:none;">View →</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- ===== SCREEN 9: COMPONENTS ===== -->
+<div id="screen-components" class="screen">
+  <div class="screen-label">Screen 9 — Component Library Reference</div>
+  <div class="mockup" style="padding:40px 48px;">
+    <div class="mockup-label">COMPONENT LIBRARY — shadcn/ui + Tailwind CSS v4</div>
+    <div style="padding:40px 0 0;">
+
+      <!-- Buttons -->
+      <h2 style="font-size:18px;font-weight:600;margin-bottom:16px;color:#111827;">Buttons</h2>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:32px;align-items:center;">
+        <button class="btn-primary">Primary</button>
+        <button class="btn-secondary">Secondary</button>
+        <button class="btn-ghost">Ghost</button>
+        <button style="padding:10px 20px;background:#dc2626;color:white;border-radius:6px;font-size:14px;font-weight:500;border:none;cursor:pointer;">Destructive</button>
+        <button style="padding:10px 20px;background:#f3f4f6;color:#9ca3af;border-radius:6px;font-size:14px;font-weight:500;border:none;cursor:not-allowed;" disabled>Disabled</button>
+        <button style="padding:10px 20px;background:#111827;color:white;border-radius:6px;font-size:14px;font-weight:500;border:none;cursor:pointer;display:flex;align-items:center;gap:8px;">
+          <span style="width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:9999px;animation:spin 0.8s linear infinite;display:inline-block;"></span>
+          Loading...
+        </button>
+      </div>
+
+      <!-- Status Badges -->
+      <h2 style="font-size:18px;font-weight:600;margin-bottom:16px;color:#111827;">Status Badges</h2>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:32px;align-items:center;">
+        <span class="badge badge-pending" style="font-size:13px;padding:4px 12px;">Pending</span>
+        <span class="badge badge-processing" style="font-size:13px;padding:4px 12px;">Processing</span>
+        <span class="badge badge-shipped" style="font-size:13px;padding:4px 12px;">Shipped</span>
+        <span class="badge badge-delivered" style="font-size:13px;padding:4px 12px;">Delivered</span>
+        <span class="badge badge-cancelled" style="font-size:13px;padding:4px 12px;">Cancelled</span>
+        <span class="badge badge-instock" style="font-size:13px;padding:4px 12px;">In Stock</span>
+        <span class="badge badge-lowstock" style="font-size:13px;padding:4px 12px;">Only 3 left</span>
+        <span class="badge badge-outofstock" style="font-size:13px;padding:4px 12px;">Out of Stock</span>
+      </div>
+
+      <!-- Form Inputs -->
+      <h2 style="font-size:18px;font-weight:600;margin-bottom:16px;color:#111827;">Form Inputs</h2>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:32px;">
+        <div>
+          <label class="input-label">Default Input</label>
+          <input class="input" placeholder="Enter value...">
+        </div>
+        <div>
+          <label class="input-label">Focused Input</label>
+          <input class="input" value="Focused state" style="border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,0.1);background:white;">
+        </div>
+        <div>
+          <label class="input-label">Error Input</label>
+          <input class="input input-error" value="invalid@">
+          <div class="error-msg">Please enter a valid email address</div>
+        </div>
+      </div>
+
+      <!-- Toast Notifications -->
+      <h2 style="font-size:18px;font-weight:600;margin-bottom:16px;color:#111827;">Toast Notifications</h2>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:32px;">
+        <div class="toast">✓ Added to cart — <a href="#" style="color:#60a5fa;text-decoration:underline;">View Cart</a></div>
+        <div class="toast toast-success">✓ Order placed successfully!</div>
+        <div class="toast toast-error">⚠ Card declined. Please try again.</div>
+        <div style="display:inline-flex;align-items:center;gap:10px;padding:12px 16px;background:#111827;color:white;border-radius:8px;font-size:13px;font-weight:500;box-shadow:0 4px 12px rgba(0,0,0,0.15);">ℹ Order status updated to Shipped</div>
+      </div>
+
+      <!-- Skeleton Loading -->
+      <h2 style="font-size:18px;font-weight:600;margin-bottom:16px;color:#111827;">Skeleton Loading States</h2>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:32px;">
+        <div style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
+          <div class="skeleton" style="height:160px;border-radius:0;"></div>
+          <div style="padding:14px;">
+            <div class="skeleton" style="height:12px;width:60%;margin-bottom:8px;"></div>
+            <div class="skeleton" style="height:16px;width:90%;margin-bottom:8px;"></div>
+            <div class="skeleton" style="height:12px;width:40%;margin-bottom:12px;"></div>
+            <div class="skeleton" style="height:32px;width:100%;"></div>
+          </div>
+        </div>
+        <div style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
+          <div class="skeleton" style="height:160px;border-radius:0;"></div>
+          <div style="padding:14px;">
+            <div class="skeleton" style="height:12px;width:50%;margin-bottom:8px;"></div>
+            <div class="skeleton" style="height:16px;width:85%;margin-bottom:8px;"></div>
+            <div class="skeleton" style="height:12px;width:35%;margin-bottom:12px;"></div>
+            <div class="skeleton" style="height:32px;width:100%;"></div>
+          </div>
+        </div>
+        <div style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
+          <div class="skeleton" style="height:160px;border-radius:0;"></div>
+          <div style="padding:14px;">
+            <div class="skeleton" style="height:12px;width:55%;margin-bottom:8px;"></div>
+            <div class="skeleton" style="height:16px;width:80%;margin-bottom:8px;"></div>
+            <div class="skeleton" style="height:12px;width:45%;margin-bottom:12px;"></div>
+            <div class="skeleton" style="height:32px;width:100%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Color Palette -->
+      <h2 style="font-size:18px;font-weight:600;margin-bottom:16px;color:#111827;">Color Palette</h2>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+        <div style="text-align:center;">
+          <div style="width:64px;height:64px;background:#111827;border-radius:8px;margin-bottom:6px;"></div>
+          <div style="font-size:10px;color:#6b7280;">Primary<br>#111827</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="width:64px;height:64px;background:#2563eb;border-radius:8px;margin-bottom:6px;"></div>
+          <div style="font-size:10px;color:#6b7280;">Accent<br>#2563eb</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="width:64px;height:64px;background:#16a34a;border-radius:8px;margin-bottom:6px;"></div>
+          <div style="font-size:10px;color:#6b7280;">Success<br>#16a34a</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="width:64px;height:64px;background:#d97706;border-radius:8px;margin-bottom:6px;"></div>
+          <div style="font-size:10px;color:#6b7280;">Warning<br>#d97706</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="width:64px;height:64px;background:#dc2626;border-radius:8px;margin-bottom:6px;"></div>
+          <div style="font-size:10px;color:#6b7280;">Error<br>#dc2626</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="width:64px;height:64px;background:#7c3aed;border-radius:8px;margin-bottom:6px;"></div>
+          <div style="font-size:10px;color:#6b7280;">Shipped<br>#7c3aed</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="width:64px;height:64px;background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb;margin-bottom:6px;"></div>
+          <div style="font-size:10px;color:#6b7280;">Surface<br>#f9fafb</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="width:64px;height:64px;background:#6b7280;border-radius:8px;margin-bottom:6px;"></div>
+          <div style="font-size:10px;color:#6b7280;">Secondary<br>#6b7280</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+<style>
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</body>
+</html>

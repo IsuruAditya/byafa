@@ -1,0 +1,118 @@
+# generated: 2026-05-03
+# last_updated: 2026-05-03
+# project: simple-ecommerce
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: _bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - Developer typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: "2026-05-03"
+last_updated: "2026-05-03"
+project: simple-ecommerce
+project_key: NOKEY
+tracking_system: file-system
+story_location: _bmad-output/implementation-artifacts
+
+development_status:
+  # ─── Epic 1: Project Foundation & Infrastructure ───────────────────────────
+  epic-1: in-progress
+  1-1-initialize-monorepo-and-frontend-scaffold: done
+  1-2-initialize-backend-scaffold-with-express-and-typescript: done
+  1-3-configure-mongodb-atlas-connection-with-serverless-caching: done
+  1-4-implement-centralized-error-handling-and-apperror: done
+  1-5-configure-vercel-serverless-deployment: done
+  1-6-configure-redux-toolkit-store-and-axios-instance: done
+  epic-1-retrospective: optional
+
+  # ─── Epic 2: User Authentication & Account Management ──────────────────────
+  epic-2: in-progress
+  2-1-user-registration: done
+  2-2-user-login-and-logout: done
+  2-3-jwt-refresh-token-flow: done
+  2-4-view-and-update-profile: done
+  2-5-delete-account: done
+  2-6-admin-login-and-rbac-middleware: done
+  epic-2-retrospective: optional
+
+  # ─── Epic 3: Product Catalog & Discovery ───────────────────────────────────
+  epic-3: in-progress
+  3-1-product-model-and-seed-data: done
+  3-2-product-catalog-api: done
+  3-3-product-catalog-page-frontend: done
+  3-4-product-detail-page-frontend: done
+  epic-3-retrospective: optional
+
+  # ─── Epic 4: Shopping Cart ──────────────────────────────────────────────────
+  epic-4: in-progress
+  4-1-cart-state-management-redux: done
+  4-2-add-to-cart-update-quantity-remove-item: done
+  4-3-cart-page: done
+  epic-4-retrospective: optional
+
+  # ─── Epic 5: Checkout & Payment ─────────────────────────────────────────────
+  epic-5: in-progress
+  5-1-order-and-stripe-models: done
+  5-2-checkout-flow-shipping-and-payment-intent: done
+  5-3-stripe-webhook-order-confirmation: done
+  5-4-order-confirmation-email: done
+  epic-5-retrospective: optional
+
+  # ─── Epic 6: Order Management (Customer) ────────────────────────────────────
+  epic-6: in-progress
+  6-1-order-history-and-detail-pages: done
+  6-2-order-status-polling: done
+  6-3-shipping-notification-email: done
+  epic-6-retrospective: optional
+
+  # ─── Epic 7: Product Reviews ─────────────────────────────────────────────────
+  epic-7: done
+  7-1-review-model-and-api: done
+  7-2-review-submission-frontend: done
+  7-3-review-display: done
+  epic-7-retrospective: optional
+
+  # ─── Epic 8: Admin Dashboard & Store Management ──────────────────────────────
+  epic-8: done
+  8-1-admin-product-management-crud: done
+  8-2-admin-inventory-management: done
+  8-3-admin-order-management: done
+  8-4-admin-stripe-refund: done
+  8-5-admin-dashboard-with-polling: done
+  8-6-admin-income-and-expense-summary: done
+  epic-8-retrospective: optional
+
+  # ─── Epic 9: SEO, Polish & Production Readiness ──────────────────────────────
+  epic-9: done
+  9-1-seo-meta-tags-with-react-helmet-async: done
+  9-2-sitemap-and-robots-txt: done
+  9-3-image-optimization-and-performance: done
+  9-4-accessibility-and-final-polish: done
+  epic-9-retrospective: optional
