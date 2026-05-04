@@ -122,7 +122,7 @@ export default function ProductsPage() {
             placeholder="Search products…"
             value={search}
             onChange={(e) => handleSearchChange(e.target.value)}
-            className="w-full rounded-md border border-gray-300 py-2 pl-9 pr-3 text-sm shadow-sm placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full rounded-md border border-gray-300 py-2 pl-9 pr-3 text-sm shadow-sm placeholder:text-gray-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
             aria-label="Search products"
           />
         </div>
@@ -131,7 +131,7 @@ export default function ProductsPage() {
         <select
           value={sortBy}
           onChange={(e) => handleSortChange(e.target.value as SortOption)}
-          className="rounded-md border border-gray-300 py-2 pl-3 pr-8 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="rounded-md border border-gray-300 py-2 pl-3 pr-8 text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
           aria-label="Sort products"
         >
           {SORT_OPTIONS.map((o) => (
@@ -152,8 +152,8 @@ export default function ProductsPage() {
             className={[
               'rounded-full px-4 py-1.5 text-sm font-medium capitalize transition-colors',
               category === cat
-                ? 'bg-indigo-600 text-white'
-                : 'bg-white border border-gray-300 text-gray-600 hover:border-indigo-400 hover:text-indigo-600',
+                ? 'bg-emerald-600 text-white'
+                : 'bg-white border border-gray-300 text-gray-600 hover:border-emerald-400 hover:text-emerald-600',
             ].join(' ')}
           >
             {cat}
@@ -171,7 +171,7 @@ export default function ProductsPage() {
           <p className="text-sm text-red-600">{error}</p>
           <button
             onClick={() => void fetchProducts()}
-            className="mt-3 text-sm font-medium text-indigo-600 hover:underline"
+            className="mt-3 text-sm font-medium text-emerald-600 hover:underline"
           >
             Try again
           </button>
@@ -184,7 +184,7 @@ export default function ProductsPage() {
               handleSearchChange('')
               handleCategoryChange('all')
             }}
-            className="mt-3 text-sm font-medium text-indigo-600 hover:underline"
+            className="mt-3 text-sm font-medium text-emerald-600 hover:underline"
           >
             Clear filters
           </button>

@@ -53,7 +53,7 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   [
     'text-sm font-medium transition-colors',
     isActive
-      ? 'text-indigo-600'
+      ? 'text-emerald-600'
       : 'text-gray-600 hover:text-gray-900',
   ].join(' ')
 
@@ -115,10 +115,14 @@ export function Navbar() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between gap-4">
 
-            {/* ── Left: Logo ──────────────────────────────────────── */}
+            {/* ── Left: Logo ──────────────────────────────────────────────────────
+                LOGO PLACEMENT: Replace the text "Byafa" below with your logo image.
+                Example: <img src="/logo.svg" alt="Byafa" className="h-8 w-auto" />
+                Keep the Link wrapper — it handles the home navigation.
+            ─────────────────────────────────────────────────────────────────── */}
             <Link
               to="/"
-              className="shrink-0 text-xl font-bold text-indigo-600 hover:text-indigo-700 transition-colors tracking-tight"
+              className="shrink-0 text-xl font-bold text-emerald-600 hover:text-emerald-700 transition-colors tracking-tight"
             >
               Byafa
             </Link>
@@ -131,22 +135,13 @@ export function Navbar() {
               <NavLink to="/products" className={navLinkClass}>
                 Shop
               </NavLink>
-              <NavLink
-                to="/products?category=electronics"
-                className={navLinkClass}
-              >
+              <NavLink to="/products?category=electronics" className={navLinkClass}>
                 Electronics
               </NavLink>
-              <NavLink
-                to="/products?category=clothing"
-                className={navLinkClass}
-              >
+              <NavLink to="/products?category=clothing" className={navLinkClass}>
                 Clothing
               </NavLink>
-              <NavLink
-                to="/products?category=home"
-                className={navLinkClass}
-              >
+              <NavLink to="/products?category=home" className={navLinkClass}>
                 Home
               </NavLink>
             </nav>
@@ -157,7 +152,7 @@ export function Navbar() {
               {/* Cart */}
               <Link
                 to="/cart"
-                className="relative flex h-10 w-10 items-center justify-center rounded-full text-gray-600 hover:bg-gray-100 hover:text-indigo-600 transition-colors"
+                className="relative flex h-10 w-10 items-center justify-center rounded-full text-gray-600 hover:bg-gray-100 hover:text-emerald-600 transition-colors"
                 aria-label={`Cart${cartCount > 0 ? `, ${cartCount} item${cartCount !== 1 ? 's' : ''}` : ''}`}
               >
                 <CartIcon />
@@ -165,7 +160,7 @@ export function Navbar() {
                   <span
                     aria-live="polite"
                     aria-atomic="true"
-                    className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-bold text-white"
+                    className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-600 text-[10px] font-bold text-white"
                   >
                     {cartCount > 99 ? '99+' : cartCount}
                   </span>
@@ -193,7 +188,7 @@ export function Navbar() {
                         <div className="px-4 py-2 border-b border-gray-100">
                           <p className="text-xs font-medium text-gray-500 truncate">{user?.email}</p>
                           {user?.role === 'admin' && (
-                            <span className="inline-block mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">
+                            <span className="inline-block mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
                               Admin
                             </span>
                           )}
@@ -216,7 +211,7 @@ export function Navbar() {
                           <Link
                             to="/admin"
                             onClick={() => setAccountOpen(false)}
-                            className="flex items-center gap-2 px-4 py-2 text-sm text-indigo-600 hover:bg-indigo-50 transition-colors"
+                            className="flex items-center gap-2 px-4 py-2 text-sm text-emerald-600 hover:bg-emerald-50 transition-colors"
                           >
                             Admin dashboard
                           </Link>
@@ -242,7 +237,7 @@ export function Navbar() {
                     </Link>
                     <Link
                       to="/register"
-                      className="inline-flex items-center justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors"
+                      className="inline-flex items-center justify-center rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors"
                     >
                       Register
                     </Link>
@@ -286,12 +281,12 @@ export function Navbar() {
           drawerOpen ? 'translate-x-0' : '-translate-x-full',
         ].join(' ')}
       >
-        {/* Drawer header */}
+        {/* Drawer header — logo placement same as main header */}
         <div className="flex h-16 items-center justify-between px-5 border-b border-gray-200 shrink-0">
           <Link
             to="/"
             onClick={closeDrawer}
-            className="text-xl font-bold text-indigo-600 tracking-tight"
+            className="text-xl font-bold text-emerald-600 tracking-tight"
           >
             Byafa
           </Link>
@@ -321,43 +316,41 @@ export function Navbar() {
               key={to}
               to={to}
               onClick={closeDrawer}
-              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-indigo-600 transition-colors"
+              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-emerald-600 transition-colors"
             >
               {label}
             </Link>
           ))}
 
           {isAuthenticated && (
-            <>
-              <div className="pt-4 pb-2">
-                <p className="px-3 pb-2 text-xs font-semibold uppercase tracking-widest text-gray-400">
-                  Account
-                </p>
+            <div className="pt-4 pb-2">
+              <p className="px-3 pb-2 text-xs font-semibold uppercase tracking-widest text-gray-400">
+                Account
+              </p>
+              <Link
+                to="/orders"
+                onClick={closeDrawer}
+                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-emerald-600 transition-colors"
+              >
+                My orders
+              </Link>
+              <Link
+                to="/profile"
+                onClick={closeDrawer}
+                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-emerald-600 transition-colors"
+              >
+                Profile
+              </Link>
+              {user?.role === 'admin' && (
                 <Link
-                  to="/orders"
+                  to="/admin"
                   onClick={closeDrawer}
-                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-indigo-600 transition-colors"
+                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-emerald-600 hover:bg-emerald-50 transition-colors"
                 >
-                  My orders
+                  Admin dashboard
                 </Link>
-                <Link
-                  to="/profile"
-                  onClick={closeDrawer}
-                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-indigo-600 transition-colors"
-                >
-                  Profile
-                </Link>
-                {user?.role === 'admin' && (
-                  <Link
-                    to="/admin"
-                    onClick={closeDrawer}
-                    className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-indigo-600 hover:bg-indigo-50 transition-colors"
-                  >
-                    Admin dashboard
-                  </Link>
-                )}
-              </div>
-            </>
+              )}
+            </div>
           )}
         </nav>
 
@@ -388,7 +381,7 @@ export function Navbar() {
               <Link
                 to="/register"
                 onClick={closeDrawer}
-                className="flex w-full items-center justify-center rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors"
+                className="flex w-full items-center justify-center rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors"
               >
                 Create account
               </Link>

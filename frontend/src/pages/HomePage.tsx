@@ -53,7 +53,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-7xl flex flex-col lg:flex-row items-center gap-10 lg:gap-16">
           {/* Copy */}
           <div className="flex-1 text-center lg:text-left">
-            <p className="text-xs font-semibold uppercase tracking-widest text-indigo-400 mb-4">
+            <p className="text-xs font-semibold uppercase tracking-widest text-emerald-400 mb-4">
               New arrivals 2026
             </p>
             <h1 className="text-4xl sm:text-5xl font-bold text-white leading-tight tracking-tight mb-5">
@@ -66,7 +66,7 @@ export default function HomePage() {
             <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
               <Link
                 to="/products"
-                className="inline-flex items-center justify-center rounded-md bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+                className="inline-flex items-center justify-center rounded-md bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-emerald-500 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500"
               >
                 Shop now
               </Link>
@@ -89,10 +89,10 @@ export default function HomePage() {
             aria-hidden="true"
           >
             {[
-              'bg-indigo-900',
+              'bg-emerald-900',
               'bg-gray-700',
               'bg-gray-700',
-              'bg-indigo-900',
+              'bg-emerald-900',
             ].map((bg, i) => (
               <div
                 key={i}
@@ -118,12 +118,12 @@ export default function HomePage() {
             <button
               key={cat.value}
               onClick={() => navigate(`/products?category=${cat.value}`)}
-              className="flex flex-col items-center gap-2 rounded-xl border border-gray-200 bg-white p-5 shadow-sm hover:shadow-md hover:border-indigo-300 transition-all group"
+              className="flex flex-col items-center gap-2 rounded-xl border border-gray-200 bg-white p-5 shadow-sm hover:shadow-md hover:border-emerald-300 transition-all group"
             >
               <span className="text-3xl" aria-hidden="true">
                 {cat.emoji}
               </span>
-              <span className="text-sm font-medium text-gray-700 group-hover:text-indigo-600 transition-colors">
+              <span className="text-sm font-medium text-gray-700 group-hover:text-emerald-600 transition-colors">
                 {cat.label}
               </span>
             </button>
@@ -139,7 +139,7 @@ export default function HomePage() {
           </h2>
           <Link
             to="/products"
-            className="text-sm font-medium text-indigo-600 hover:text-indigo-500 transition-colors"
+            className="text-sm font-medium text-emerald-600 hover:text-emerald-500 transition-colors"
           >
             View all →
           </Link>
@@ -154,7 +154,7 @@ export default function HomePage() {
             <p className="text-gray-500 text-sm">No products yet.</p>
             <Link
               to="/products"
-              className="mt-3 inline-block text-sm font-medium text-indigo-600 hover:underline"
+              className="mt-3 inline-block text-sm font-medium text-emerald-600 hover:underline"
             >
               Browse catalog
             </Link>

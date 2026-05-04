@@ -38,10 +38,10 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
 
       {/* Info */}
       <div className="flex flex-1 flex-col gap-1.5 p-4">
-        <p className="text-xs font-medium uppercase tracking-wide text-indigo-500">
+        <p className="text-xs font-medium uppercase tracking-wide text-emerald-500">
           {product.category}
         </p>
-        <h3 className="text-sm font-semibold text-gray-900 line-clamp-2 leading-snug group-hover:text-indigo-600 transition-colors">
+        <h3 className="text-sm font-semibold text-gray-900 line-clamp-2 leading-snug group-hover:text-emerald-600 transition-colors">
           {product.name}
         </h3>
         <StarRating
