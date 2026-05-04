@@ -9,7 +9,7 @@ import { useOrderStatusPolling } from '../features/orders/useOrderStatusPolling'
 const STATUS_STYLES: Record<string, string> = {
   pending:    'bg-yellow-50 text-yellow-700 border-yellow-200',
   processing: 'bg-blue-50 text-blue-700 border-blue-200',
-  shipped:    'bg-indigo-50 text-indigo-700 border-indigo-200',
+  shipped:    'bg-violet-50 text-violet-700 border-violet-200',
   delivered:  'bg-green-50 text-green-700 border-green-200',
   cancelled:  'bg-red-50 text-red-700 border-red-200',
 }
@@ -46,7 +46,7 @@ export default function OrderDetailPage() {
   if (error || !order) return (
     <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center">
       <p className="text-sm text-red-600">{error ?? 'Order not found.'}</p>
-      <Link to="/orders" className="mt-3 inline-block text-sm font-medium text-indigo-600 hover:underline">
+      <Link to="/orders" className="mt-3 inline-block text-sm font-medium text-emerald-600 hover:underline">
         ← Back to orders
       </Link>
     </div>
@@ -60,7 +60,7 @@ export default function OrderDetailPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <Link to="/orders" className="text-sm text-indigo-600 hover:underline">
+          <Link to="/orders" className="text-sm text-emerald-600 hover:underline">
             ← My orders
           </Link>
           <h1 className="mt-1 text-2xl font-bold text-gray-900">
@@ -87,17 +87,17 @@ export default function OrderDetailPage() {
                   <div className={[
                     'h-8 w-8 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-colors',
                     i <= currentStep
-                      ? 'bg-indigo-600 border-indigo-600 text-white'
+                      ? 'bg-emerald-600 border-emerald-600 text-white'
                       : 'bg-white border-gray-300 text-gray-400',
                   ].join(' ')}>
                     {i < currentStep ? '✓' : i + 1}
                   </div>
-                  <span className={`text-xs capitalize font-medium ${i <= currentStep ? 'text-indigo-600' : 'text-gray-400'}`}>
+                  <span className={`text-xs capitalize font-medium ${i <= currentStep ? 'text-emerald-600' : 'text-gray-400'}`}>
                     {step}
                   </span>
                 </div>
                 {i < STATUS_STEPS.length - 1 && (
-                  <div className={`flex-1 h-0.5 mx-2 mb-5 ${i < currentStep ? 'bg-indigo-600' : 'bg-gray-200'}`} />
+                  <div className={`flex-1 h-0.5 mx-2 mb-5 ${i < currentStep ? 'bg-emerald-600' : 'bg-gray-200'}`} />
                 )}
               </div>
             ))}

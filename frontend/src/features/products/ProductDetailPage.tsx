@@ -122,7 +122,7 @@ export default function ProductDetailPage() {
         <p className="text-sm text-red-600">{error ?? 'Product not found.'}</p>
         <Link
           to="/products"
-          className="mt-3 inline-block text-sm font-medium text-indigo-600 hover:underline"
+          className="mt-3 inline-block text-sm font-medium text-emerald-600 hover:underline"
         >
           ← Back to products
         </Link>
@@ -160,7 +160,7 @@ export default function ProductDetailPage() {
       <nav className="mb-6 text-sm text-gray-500" aria-label="Breadcrumb">
         <ol className="flex items-center gap-1.5">
           <li>
-            <Link to="/products" className="hover:text-indigo-600 transition-colors">
+            <Link to="/products" className="hover:text-emerald-600 transition-colors">
               Products
             </Link>
           </li>
@@ -198,7 +198,7 @@ export default function ProductDetailPage() {
                   className={[
                     'shrink-0 h-16 w-16 rounded-lg overflow-hidden border-2 transition-colors',
                     selectedImage === i
-                      ? 'border-indigo-500'
+                      ? 'border-emerald-500'
                       : 'border-transparent hover:border-gray-300',
                   ].join(' ')}
                 >
@@ -218,7 +218,7 @@ export default function ProductDetailPage() {
         <div className="space-y-5">
           {/* Category + name */}
           <div>
-            <p className="text-sm font-medium uppercase tracking-wide text-indigo-500">
+            <p className="text-sm font-medium uppercase tracking-wide text-emerald-500">
               {product.category}
             </p>
             <h1 className="mt-1 text-2xl font-bold text-gray-900 leading-snug">

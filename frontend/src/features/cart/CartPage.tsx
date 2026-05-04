@@ -111,7 +111,7 @@ export default function CartPage() {
 
           <Link
             to="/products"
-            className="block text-center text-sm text-indigo-600 hover:underline"
+            className="block text-center text-sm text-emerald-600 hover:underline"
           >
             ← Continue shopping
           </Link>

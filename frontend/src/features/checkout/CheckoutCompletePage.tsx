@@ -46,7 +46,7 @@ export default function CheckoutCompletePage() {
         <p className="text-sm text-gray-500">
           Something went wrong. Please check your order history or try again.
         </p>
-        <Link to="/cart" className="text-sm font-medium text-indigo-600 hover:underline">
+        <Link to="/cart" className="text-sm font-medium text-emerald-600 hover:underline">
           Return to cart
         </Link>
       </div>
@@ -67,7 +67,7 @@ export default function CheckoutCompletePage() {
       <div className="flex justify-center gap-4 pt-2">
         <Link
           to="/orders"
-          className="text-sm font-medium text-indigo-600 hover:underline"
+          className="text-sm font-medium text-emerald-600 hover:underline"
         >
           View my orders
         </Link>

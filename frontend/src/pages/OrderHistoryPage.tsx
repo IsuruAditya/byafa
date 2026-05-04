@@ -8,7 +8,7 @@ import { Spinner } from '../components/ui/Spinner'
 const STATUS_STYLES: Record<string, string> = {
   pending:    'bg-yellow-50 text-yellow-700 border-yellow-200',
   processing: 'bg-blue-50 text-blue-700 border-blue-200',
-  shipped:    'bg-indigo-50 text-indigo-700 border-indigo-200',
+  shipped:    'bg-violet-50 text-violet-700 border-violet-200',
   delivered:  'bg-green-50 text-green-700 border-green-200',
   cancelled:  'bg-red-50 text-red-700 border-red-200',
 }
@@ -37,7 +37,7 @@ export default function OrderHistoryPage() {
     <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
       <h1 className="text-xl font-bold text-gray-900">No orders yet</h1>
       <p className="text-sm text-gray-500">When you place an order it will appear here.</p>
-      <Link to="/products" className="text-sm font-medium text-indigo-600 hover:underline">
+      <Link to="/products" className="text-sm font-medium text-emerald-600 hover:underline">
         Start shopping
       </Link>
     </div>

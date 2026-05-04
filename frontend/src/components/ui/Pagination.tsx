@@ -49,7 +49,7 @@ export function Pagination({ page, totalPages, onPageChange }: PaginationProps) 
             className={[
               'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
               p === page
-                ? 'bg-indigo-600 text-white'
+                ? 'bg-emerald-600 text-white'
                 : 'text-gray-600 hover:bg-gray-100',
             ].join(' ')}
           >

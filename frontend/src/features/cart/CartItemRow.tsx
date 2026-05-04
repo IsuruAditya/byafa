@@ -43,7 +43,7 @@ export function CartItemRow({ item }: CartItemRowProps) {
       <div className="flex flex-1 flex-col gap-1 min-w-0">
         <Link
           to={`/products/${item.productId}`}
-          className="text-sm font-semibold text-gray-900 hover:text-indigo-600 transition-colors line-clamp-2"
+          className="text-sm font-semibold text-gray-900 hover:text-emerald-600 transition-colors line-clamp-2"
         >
           {item.name}
         </Link>
@@ -76,7 +76,7 @@ export function CartItemRow({ item }: CartItemRowProps) {
               value={item.quantity}
               onChange={(e) => handleQuantityChange(e.target.value)}
               aria-label={`Quantity for ${item.name}`}
-              className="w-10 text-center text-sm font-medium text-gray-900 border-x border-gray-300 py-1 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="w-10 text-center text-sm font-medium text-gray-900 border-x border-gray-300 py-1 focus:outline-none focus:ring-1 focus:ring-emerald-500"
             />
             <button
               onClick={() =>

@@ -128,7 +128,7 @@ export default function AdminDashboard() {
                 className={[
                   'px-3 py-1 rounded-md text-xs font-medium capitalize transition-colors',
                   period === p
-                    ? 'bg-indigo-600 text-white'
+                    ? 'bg-emerald-600 text-white'
                     : 'text-gray-500 hover:bg-gray-100',
                 ].join(' ')}
               >
@@ -159,7 +159,7 @@ export default function AdminDashboard() {
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-semibold text-gray-900">Recent orders</h2>
-          <Link to="/admin/orders" className="text-sm text-indigo-600 hover:underline">
+          <Link to="/admin/orders" className="text-sm text-emerald-600 hover:underline">
             View all →
           </Link>
         </div>

@@ -116,7 +116,7 @@ export default function AdminProductForm() {
           <label className="text-sm font-medium text-gray-700">Description</label>
           <textarea
             rows={4}
-            className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+            className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
             {...register('description')}
           />
           {errors.description && (
@@ -146,7 +146,7 @@ export default function AdminProductForm() {
             ))}
             {newPreviews.map((src, i) => (
               <div key={i} className="relative h-20 w-20">
-                <img src={src} alt="" className="h-full w-full rounded-lg object-cover border border-indigo-300" />
+                <img src={src} alt="" className="h-full w-full rounded-lg object-cover border border-emerald-300" />
                 <button
                   type="button"
                   onClick={() => removeNew(i)}
@@ -158,7 +158,7 @@ export default function AdminProductForm() {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="h-20 w-20 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 hover:border-indigo-400 hover:text-indigo-500 transition-colors text-2xl"
+              className="h-20 w-20 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 hover:border-emerald-400 hover:text-emerald-500 transition-colors text-2xl"
               aria-label="Add image"
             >+</button>
           </div>

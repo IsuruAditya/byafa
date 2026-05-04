@@ -68,7 +68,7 @@ export function ReviewForm({ productId, orderId, onReviewSubmitted }: ReviewForm
   if (!isAuthenticated) {
     return (
       <p className="text-sm text-gray-500">
-        Please <a href="/login" className="text-indigo-600 hover:underline">sign in</a> to leave a review.
+        Please <a href="/login" className="text-emerald-600 hover:underline">sign in</a> to leave a review.
       </p>
     )
   }
@@ -100,7 +100,7 @@ export function ReviewForm({ productId, orderId, onReviewSubmitted }: ReviewForm
               aria-pressed={rating === star}
               onClick={() => setValue('rating', star, { shouldValidate: true })}
               onMouseEnter={() => setHovered(star)}
-              className="text-2xl leading-none transition-transform hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded"
+              className="text-2xl leading-none transition-transform hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded"
             >
               <span className={(hovered || rating) >= star ? 'text-amber-400' : 'text-gray-200'}>
                 ★
@@ -122,7 +122,7 @@ export function ReviewForm({ productId, orderId, onReviewSubmitted }: ReviewForm
           id="review-comment"
           rows={4}
           placeholder="Share your experience with this product…"
-          className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+          className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm placeholder:text-gray-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
           aria-invalid={!!errors.comment}
           aria-describedby={errors.comment ? 'comment-error' : undefined}
           {...register('comment')}

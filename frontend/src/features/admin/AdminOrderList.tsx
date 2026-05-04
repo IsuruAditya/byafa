@@ -10,7 +10,7 @@ import { useDebounce } from '../../hooks/useDebounce'
 const STATUS_STYLES: Record<string, string> = {
   pending:    'bg-yellow-50 text-yellow-700 border-yellow-200',
   processing: 'bg-blue-50 text-blue-700 border-blue-200',
-  shipped:    'bg-indigo-50 text-indigo-700 border-indigo-200',
+  shipped:    'bg-violet-50 text-violet-700 border-violet-200',
   delivered:  'bg-green-50 text-green-700 border-green-200',
   cancelled:  'bg-red-50 text-red-700 border-red-200',
 }
@@ -65,12 +65,12 @@ export default function AdminOrderList() {
           placeholder="Search by email or order ID…"
           value={search}
           onChange={(e) => handleSearchChange(e.target.value)}
-          className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
         />
         <select
           value={status}
           onChange={(e) => handleStatusChange(e.target.value)}
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
         >
           {STATUSES.map((s) => (
             <option key={s} value={s}>{s ? s.charAt(0).toUpperCase() + s.slice(1) : 'All statuses'}</option>
@@ -126,7 +126,7 @@ export default function AdminOrderList() {
                       <td className="px-4 py-3 text-right">
                         <Link
                           to={`/admin/orders/${o._id}`}
-                          className="text-sm font-medium text-indigo-600 hover:underline"
+                          className="text-sm font-medium text-emerald-600 hover:underline"
                         >
                           View
                         </Link>

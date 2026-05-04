@@ -116,7 +116,7 @@ export default function CheckoutPage() {
               <span
                 className={[
                   'font-medium capitalize',
-                  step === s ? 'text-indigo-600' : 'text-gray-400',
+                  step === s ? 'text-emerald-600' : 'text-gray-400',
                 ].join(' ')}
                 aria-current={step === s ? 'step' : undefined}
               >
@@ -158,7 +158,7 @@ export default function CheckoutPage() {
                 </h1>
                 <button
                   onClick={() => setStep('shipping')}
-                  className="text-sm text-indigo-600 hover:underline"
+                  className="text-sm text-emerald-600 hover:underline"
                 >
                   ← Edit shipping
                 </button>
