@@ -75,7 +75,7 @@ app.get('/sitemap.xml', async (_req, res) => {
     const productUrls = products
       .map(
         (p) =>
-          `  <url>\n    <loc>${env.CLIENT_URL}/products/${p._id as string}</loc>\n    <lastmod>${new Date(p.updatedAt).toISOString().split('T')[0]}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>`
+          `  <url>\n    <loc>${env.CLIENT_URL}/products/${String(p._id)}</loc>\n    <lastmod>${new Date(p.updatedAt).toISOString().split('T')[0]}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>`
       )
       .join('\n')
 

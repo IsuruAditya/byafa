@@ -5,7 +5,6 @@ import { AppError } from '../utils/AppError'
 import {
   generateAccessToken,
   generateRefreshToken,
-  verifyAccessToken,
 } from '../utils/generateTokens'
 import mongoose from 'mongoose'
 

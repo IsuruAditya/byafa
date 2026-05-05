@@ -95,7 +95,7 @@ export async function issueRefund(req: Request, res: Response): Promise<void> {
 
 // ── Dashboard ────────────────────────────────────────────────────────────────
 
-export async function getDashboard(req: Request, res: Response): Promise<void> {
+export async function getDashboard(_req: Request, res: Response): Promise<void> {
   const stats = await adminService.getDashboardStats()
   res.status(200).json({ success: true, data: stats })
 }
