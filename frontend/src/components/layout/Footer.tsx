@@ -1,87 +1,116 @@
 import { Link } from 'react-router-dom'
 
+/**
+ * Site footer — navigation links, legal, and trust badges only.
+ * Industry standard (ASOS, Zara, Shopify): footer is purely informational.
+ * Newsletter signup lives in its own section above this.
+ */
 export function Footer() {
   return (
-    <footer className="border-t border-gray-200 bg-white mt-auto">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
+    <footer className="bg-white border-t border-gray-200" aria-label="Site footer">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
 
         {/* Main columns */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
+        <div className="grid grid-cols-2 gap-8 sm:grid-cols-4 mb-10">
 
-          {/* Brand column */}
-          <div className="space-y-3 sm:col-span-2 lg:col-span-1">
-            <Link to="/" className="inline-block">
+          {/* Brand */}
+          <div className="col-span-2 sm:col-span-1 space-y-4">
+            <Link to="/" aria-label="Byafa home">
               <img src="/logo.png" alt="Byafa" className="h-9 w-auto" />
             </Link>
-            <p className="text-sm text-gray-500 leading-relaxed max-w-xs">
-              Quality goods, delivered fast. Real reviews, transparent pricing,
-              and shipping you can track in real time.
+            <p className="text-sm text-gray-500 leading-relaxed">
+              Quality goods, delivered fast. Real reviews, transparent pricing.
             </p>
           </div>
 
-          {/* Shop links */}
+          {/* Shop */}
           <div>
             <h3 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-4">
               Shop
             </h3>
-            <ul className="space-y-2.5">
-              <li><Link to="/products" className="text-sm text-gray-600 hover:text-emerald-600 transition-colors">All products</Link></li>
-              <li><Link to="/products?category=electronics" className="text-sm text-gray-600 hover:text-emerald-600 transition-colors">Electronics</Link></li>
-              <li><Link to="/products?category=clothing" className="text-sm text-gray-600 hover:text-emerald-600 transition-colors">Clothing</Link></li>
-              <li><Link to="/products?category=home" className="text-sm text-gray-600 hover:text-emerald-600 transition-colors">Home & Living</Link></li>
-              <li><Link to="/products?category=books" className="text-sm text-gray-600 hover:text-emerald-600 transition-colors">Books</Link></li>
+            <ul className="space-y-3">
+              {[
+                { to: '/products', label: 'All products' },
+                { to: '/products?category=electronics', label: 'Electronics' },
+                { to: '/products?category=clothing', label: 'Clothing' },
+                { to: '/products?category=home', label: 'Home & Living' },
+                { to: '/products?category=books', label: 'Books' },
+                { to: '/products?category=sports', label: 'Sports' },
+              ].map(({ to, label }) => (
+                <li key={to}>
+                  <Link to={to} className="text-sm text-gray-600 hover:text-emerald-600 transition-colors">
+                    {label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Account links */}
+          {/* Account */}
           <div>
             <h3 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-4">
               Account
             </h3>
-            <ul className="space-y-2.5">
-              <li><Link to="/login" className="text-sm text-gray-600 hover:text-emerald-600 transition-colors">Sign in</Link></li>
-              <li><Link to="/register" className="text-sm text-gray-600 hover:text-emerald-600 transition-colors">Create account</Link></li>
-              <li><Link to="/orders" className="text-sm text-gray-600 hover:text-emerald-600 transition-colors">My orders</Link></li>
-              <li><Link to="/profile" className="text-sm text-gray-600 hover:text-emerald-600 transition-colors">Profile</Link></li>
+            <ul className="space-y-3">
+              {[
+                { to: '/login', label: 'Sign in' },
+                { to: '/register', label: 'Create account' },
+                { to: '/orders', label: 'My orders' },
+                { to: '/profile', label: 'Profile' },
+                { to: '/cart', label: 'Cart' },
+              ].map(({ to, label }) => (
+                <li key={to}>
+                  <Link to={to} className="text-sm text-gray-600 hover:text-emerald-600 transition-colors">
+                    {label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Newsletter */}
+          {/* Help */}
           <div>
             <h3 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-4">
-              Stay in the loop
+              Help
             </h3>
-            <p className="text-xs text-gray-500 mb-3 leading-relaxed">
-              New arrivals, exclusive deals and updates — straight to your inbox.
-            </p>
-            <form
-              onSubmit={(e) => { e.preventDefault() }}
-              className="space-y-2"
-            >
-              <input
-                type="email"
-                placeholder="Your email address"
-                required
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
-                aria-label="Email for newsletter"
-              />
-              <button
-                type="submit"
-                className="w-full rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors"
-              >
-                Subscribe
-              </button>
-            </form>
+            <ul className="space-y-3">
+              <li>
+                <a href="mailto:support@byafa.com" className="text-sm text-gray-600 hover:text-emerald-600 transition-colors">
+                  Contact us
+                </a>
+              </li>
+              <li>
+                <span className="text-sm text-gray-600">Shipping info</span>
+              </li>
+              <li>
+                <span className="text-sm text-gray-600">Returns</span>
+              </li>
+              <li>
+                <span className="text-sm text-gray-600">FAQ</span>
+              </li>
+            </ul>
           </div>
         </div>
 
-        {/* Bottom bar */}
-        <div className="border-t border-gray-100 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-gray-400">
+        {/* Bottom bar — legal + trust badges */}
+        <div className="border-t border-gray-100 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-xs text-gray-400 order-2 sm:order-1">
             © {new Date().getFullYear()} Byafa. All rights reserved.
           </p>
-          <div className="flex items-center gap-4 text-xs text-gray-400">
-            <span>🔒 Secure payments by Stripe</span>
+
+          {/* Payment trust badges */}
+          <div className="flex items-center gap-3 order-1 sm:order-2">
+            <span className="text-xs text-gray-400 mr-1">Secure payments:</span>
+            {/* Stripe badge */}
+            <span className="inline-flex items-center gap-1 rounded border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-medium text-gray-600">
+              🔒 Stripe
+            </span>
+            <span className="inline-flex items-center gap-1 rounded border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-medium text-gray-600">
+              💳 Visa
+            </span>
+            <span className="inline-flex items-center gap-1 rounded border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-medium text-gray-600">
+              💳 Mastercard
+            </span>
           </div>
         </div>
       </div>
