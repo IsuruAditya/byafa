@@ -113,7 +113,13 @@ export default function AdminDashboard() {
         <StatCard label="Today's orders" value={stats?.todayOrderCount ?? 0} />
         <StatCard label="Today's revenue" value={formatCurrency(stats?.todayRevenue ?? 0)} />
         <StatCard label="Pending orders" value={stats?.pendingOrderCount ?? 0} />
-        <StatCard label="Polling" value="Every 30s" />
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+          <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Manage</p>
+          <div className="mt-2 flex flex-col gap-1.5">
+            <Link to="/admin/orders" className="text-sm font-medium text-emerald-600 hover:underline">View all orders →</Link>
+            <Link to="/admin/products" className="text-sm font-medium text-emerald-600 hover:underline">Manage products →</Link>
+          </div>
+        </div>
       </div>
 
       {/* Revenue summary */}

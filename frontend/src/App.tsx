@@ -59,7 +59,8 @@ export default function App() {
             </Route>
           </Route>
 
-          <Route path="*" element={<NotFoundPage />} />        </Route>
+          <Route path="*" element={<NotFoundPage />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   )

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { loadStripe } from '@stripe/stripe-js'
+import { Spinner } from '../../components/ui/Spinner'
 
 const stripePromise = loadStripe(
   import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY as string
@@ -33,8 +34,9 @@ export default function CheckoutCompletePage() {
 
   if (status === 'loading') {
     return (
-      <div className="flex justify-center py-24 text-gray-400 text-sm">
-        Confirming your payment…
+      <div className="flex flex-col items-center justify-center py-24 gap-4">
+        <Spinner size="lg" />
+        <p className="text-sm text-gray-500">Confirming your payment…</p>
       </div>
     )
   }

@@ -19,13 +19,7 @@ function getReviewerName(userId: Review['userId']): string {
 }
 
 export function ReviewList({ reviews }: ReviewListProps) {
-  if (reviews.length === 0) {
-    return (
-      <p className="text-sm text-gray-400 py-4">
-        No reviews yet. Be the first to review this product.
-      </p>
-    )
-  }
+  if (reviews.length === 0) return null
 
   return (
     <ul className="space-y-4">
