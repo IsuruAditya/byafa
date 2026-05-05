@@ -1,4 +1,4 @@
-import { ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { useAuthInit } from '../features/auth/useAuthInit'
 
 interface Props {

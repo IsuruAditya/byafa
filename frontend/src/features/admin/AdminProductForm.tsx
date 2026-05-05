@@ -14,9 +14,9 @@ import axios from 'axios'
 const schema = z.object({
   name:          z.string().min(1, 'Name is required'),
   description:   z.string().min(1, 'Description is required'),
-  price:         z.coerce.number().min(0, 'Price must be positive'),
+  price:         z.string().min(1, 'Price is required').transform((v) => parseFloat(v)),
   category:      z.string().min(1, 'Category is required'),
-  stockQuantity: z.coerce.number().int().min(0, 'Stock must be non-negative'),
+  stockQuantity: z.string().min(1, 'Stock is required').transform((v) => parseInt(v, 10)),
 })
 
 type FormValues = z.infer<typeof schema>
