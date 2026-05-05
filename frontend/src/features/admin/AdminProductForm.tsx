@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { getProductByIdApi } from '../../api/productsApi'
 import { adminCreateProductApi, adminUpdateProductApi } from '../../api/adminApi'
@@ -11,12 +10,14 @@ import { useAppDispatch } from '../../store/hooks'
 import { addToast } from '../../store/slices/uiSlice'
 import axios from 'axios'
 
+// Schema is only used for the type — validation is done manually in onSubmit
+// to avoid the Zod resolver / React Hook Form generic mismatch with numeric fields
 const schema = z.object({
   name:          z.string().min(1, 'Name is required'),
   description:   z.string().min(1, 'Description is required'),
-  price:         z.string().min(1, 'Price is required'),
+  price:         z.number().min(0, 'Price must be positive'),
   category:      z.string().min(1, 'Category is required'),
-  stockQuantity: z.string().min(1, 'Stock is required'),
+  stockQuantity: z.number().int().min(0, 'Stock must be non-negative'),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -37,7 +38,10 @@ export default function AdminProductForm() {
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<FormValues>({ resolver: zodResolver(schema) })
+  } = useForm<FormValues>({
+    // No zodResolver — use native HTML validation + valueAsNumber
+    defaultValues: { name: '', description: '', price: 0, category: '', stockQuantity: 0 },
+  })
 
   useEffect(() => {
     if (!isEdit || !id) return
@@ -45,10 +49,10 @@ export default function AdminProductForm() {
       if (res.success && res.data) {
         const p = res.data
         reset({
-          name: p.name,
-          description: p.description,
-          price: p.price,
-          category: p.category,
+          name:          p.name,
+          description:   p.description,
+          price:         p.price,
+          category:      p.category,
           stockQuantity: p.stockQuantity,
         })
         setExistingImages(p.images)
@@ -79,11 +83,11 @@ export default function AdminProductForm() {
 
   async function onSubmit(values: FormValues) {
     const formData = new FormData()
-    formData.append('name',          values.name)
-    formData.append('description',   values.description)
-    formData.append('price',         String(values.price))
-    formData.append('category',      values.category)
-    formData.append('stockQuantity', String(values.stockQuantity))
+    formData.append('name',           values.name)
+    formData.append('description',    values.description)
+    formData.append('price',          String(values.price))
+    formData.append('category',       values.category)
+    formData.append('stockQuantity',  String(values.stockQuantity))
     formData.append('existingImages', JSON.stringify(existingImages))
     newFiles.forEach((f) => formData.append('images', f))
 
@@ -111,23 +115,39 @@ export default function AdminProductForm() {
       </h1>
 
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4 bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-        <Input label="Name" error={errors.name?.message} {...register('name')} />
+        <Input label="Name" error={errors.name?.message} {...register('name', { required: 'Name is required' })} />
+
         <div className="flex flex-col gap-1">
           <label className="text-sm font-medium text-gray-700">Description</label>
           <textarea
             rows={4}
             className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
-            {...register('description')}
+            {...register('description', { required: 'Description is required' })}
           />
           {errors.description && (
             <p className="text-xs text-red-600">{errors.description.message}</p>
           )}
         </div>
+
         <div className="grid grid-cols-2 gap-4">
-          <Input label="Price ($)" type="number" step="0.01" error={errors.price?.message} {...register('price')} />
-          <Input label="Stock quantity" type="number" error={errors.stockQuantity?.message} {...register('stockQuantity')} />
+          <Input
+            label="Price ($)"
+            type="number"
+            step="0.01"
+            min="0"
+            error={errors.price?.message}
+            {...register('price', { valueAsNumber: true, required: 'Price is required', min: { value: 0, message: 'Price must be positive' } })}
+          />
+          <Input
+            label="Stock quantity"
+            type="number"
+            min="0"
+            error={errors.stockQuantity?.message}
+            {...register('stockQuantity', { valueAsNumber: true, required: 'Stock is required', min: { value: 0, message: 'Stock must be non-negative' } })}
+          />
         </div>
-        <Input label="Category" error={errors.category?.message} {...register('category')} />
+
+        <Input label="Category" error={errors.category?.message} {...register('category', { required: 'Category is required' })} />
 
         {/* Image management */}
         <div className="space-y-2">
