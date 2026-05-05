@@ -146,9 +146,7 @@ export default function HomePage() {
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-16">
-            <Spinner size="lg" />
-          </div>
+          <ProductGridSkeleton count={4} />
         ) : featured.length === 0 ? (
           <div className="rounded-xl border border-gray-200 bg-white p-12 text-center">
             <p className="text-gray-500 text-sm">No products yet.</p>

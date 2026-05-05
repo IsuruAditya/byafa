@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
-import { getProductByIdApi } from '../../api/productsApi'
+import { getProductByIdApi, getProductsApi } from '../../api/productsApi'
 import { getProductReviewsApi } from '../../api/reviewsApi'
 import type { Product } from '../../types/product.types'
 import type { Review } from '../../types/review.types'
@@ -12,6 +12,7 @@ import { useStockPolling } from './useStockPolling'
 import { StarRating } from '../../components/ui/StarRating'
 import { Button } from '../../components/ui/Button'
 import { Spinner } from '../../components/ui/Spinner'
+import { ProductCard } from './ProductCard'
 import { formatCurrency } from '../../utils/formatCurrency'
 import { cloudinaryFull, cloudinaryThumb } from '../../utils/cloudinaryImage'
 import { ReviewList } from '../reviews/ReviewList'
@@ -26,13 +27,13 @@ export default function ProductDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedImage, setSelectedImage] = useState(0)
+  const [lightboxOpen, setLightboxOpen] = useState(false)
   const [addingToCart, setAddingToCart] = useState(false)
   const [reviews, setReviews] = useState<Review[]>([])
-  // orderId from a completed order containing this product — enables review form
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([])
   const [eligibleOrderId, setEligibleOrderId] = useState<string | null>(null)
 
   const isAuthenticated = useAppSelector((s) => s.auth.isAuthenticated)
-  // How many of this item are already in the cart
   const cartQuantity = useAppSelector(
     (s) => s.cart.items.find((i) => i.productId === id)?.quantity ?? 0
   )
@@ -41,6 +42,8 @@ export default function ProductDetailPage() {
     if (!id) return
     setLoading(true)
     setError(null)
+    setSelectedImage(0)
+    setRelatedProducts([])
 
     getProductByIdApi(id)
       .then((res) => {
@@ -56,13 +59,21 @@ export default function ProductDetailPage() {
     product?.stockQuantity ?? 0
   )
 
-  // Keep stock in sync when product first loads
   useEffect(() => {
-    if (product) refresh()
+    if (product) {
+      refresh()
+      // Fetch related products from same category
+      getProductsApi({ category: product.category, pageSize: 4 })
+        .then((res) => {
+          if (res.data) {
+            setRelatedProducts(res.data.filter((p) => p._id !== product._id).slice(0, 4))
+          }
+        })
+        .catch(() => {/* non-critical */})
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product?._id])
 
-  // Fetch reviews
   useEffect(() => {
     if (!id) return
     getProductReviewsApi(id)
@@ -70,43 +81,55 @@ export default function ProductDetailPage() {
       .catch(() => {/* non-critical */})
   }, [id])
 
-  // Find an eligible order for the review form (authenticated users only)
   useEffect(() => {
     if (!isAuthenticated || !id) return
     getMyOrdersApi()
       .then((res) => {
         if (!res.success || !res.data) return
         const order = res.data.find(
-          (o) =>
-            o.status !== 'cancelled' &&
-            o.items.some((item) => item.productId === id)
+          (o) => o.status !== 'cancelled' && o.items.some((item) => item.productId === id)
         )
         if (order) setEligibleOrderId(order._id)
       })
       .catch(() => {/* non-critical */})
   }, [isAuthenticated, id])
 
-  async function handleAddToCart() {
+  // Close lightbox on Escape
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (!lightboxOpen) return
+      if (e.key === 'Escape') setLightboxOpen(false)
+      if (e.key === 'ArrowRight') setSelectedImage((i) => Math.min(i + 1, (product?.images.length ?? 1) - 1))
+      if (e.key === 'ArrowLeft') setSelectedImage((i) => Math.max(i - 1, 0))
+    }
+    document.addEventListener('keydown', handleKey)
+    return () => document.removeEventListener('keydown', handleKey)
+  }, [lightboxOpen, product?.images.length])
+
+  // Lock scroll when lightbox open
+  useEffect(() => {
+    document.body.style.overflow = lightboxOpen ? 'hidden' : ''
+    return () => { document.body.style.overflow = '' }
+  }, [lightboxOpen])
+
+  const handleAddToCart = useCallback(async () => {
     if (!product) return
     setAddingToCart(true)
     try {
-      dispatch(
-        addToCart({
-          productId: product._id,
-          name: product.name,
-          price: product.price,
-          image: product.images[0] ?? '',
-          quantity: 1,
-          stockQuantity: stock,
-        })
-      )
+      dispatch(addToCart({
+        productId: product._id,
+        name: product.name,
+        price: product.price,
+        image: product.images[0] ?? '',
+        quantity: 1,
+        stockQuantity: stock,
+      }))
       dispatch(addToast({ message: `${product.name} added to cart`, type: 'success' }))
-      // Refresh stock count after adding to cart
       await refresh()
     } finally {
       setAddingToCart(false)
     }
-  }
+  }, [product, stock, dispatch, refresh])
 
   if (loading) {
     return (
@@ -120,24 +143,17 @@ export default function ProductDetailPage() {
     return (
       <div className="rounded-xl border border-red-200 bg-red-50 p-8 text-center">
         <p className="text-sm text-red-600">{error ?? 'Product not found.'}</p>
-        <Link
-          to="/products"
-          className="mt-3 inline-block text-sm font-medium text-emerald-600 hover:underline"
-        >
+        <Link to="/products" className="mt-3 inline-block text-sm font-medium text-emerald-600 hover:underline">
           ← Back to products
         </Link>
       </div>
     )
   }
 
-  const images =
-    product.images.length > 0
-      ? product.images
-      : ['https://placehold.co/600x400?text=No+Image']
-
-  // Optimised variants
-  const fullImages = images.map((url) => cloudinaryFull(url, 800))
-  const thumbImages = images.map((url) => cloudinaryThumb(url, 64, 64))
+  const images = product.images.length > 0 ? product.images : ['https://placehold.co/600x400?text=No+Image']
+  const fullImages = images.map((url) => cloudinaryFull(url, 1200))
+  const displayImages = images.map((url) => cloudinaryFull(url, 800))
+  const thumbImages = images.map((url) => cloudinaryThumb(url, 80, 80))
 
   const canAddMore = stock > cartQuantity
   const outOfStock = stock === 0
@@ -147,44 +163,90 @@ export default function ProductDetailPage() {
       <Helmet>
         <title>{product.name} | Byafa</title>
         <meta name="description" content={product.description.slice(0, 160)} />
-        {/* Open Graph */}
         <meta property="og:title" content={`${product.name} | Byafa`} />
         <meta property="og:description" content={product.description.slice(0, 160)} />
-        {product.images[0] && (
-          <meta property="og:image" content={product.images[0]} />
-        )}
+        {product.images[0] && <meta property="og:image" content={product.images[0]} />}
         <meta property="og:type" content="product" />
       </Helmet>
 
-      {/* Breadcrumb */}
+      {/* ── Lightbox ─────────────────────────────────────────────────── */}
+      {lightboxOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
+          onClick={() => setLightboxOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Image viewer"
+        >
+          <button
+            className="absolute top-4 right-4 text-white/80 hover:text-white text-3xl leading-none"
+            onClick={() => setLightboxOpen(false)}
+            aria-label="Close image viewer"
+          >
+            ×
+          </button>
+          {images.length > 1 && (
+            <>
+              <button
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white text-4xl leading-none px-2"
+                onClick={(e) => { e.stopPropagation(); setSelectedImage((i) => Math.max(i - 1, 0)) }}
+                aria-label="Previous image"
+              >
+                ‹
+              </button>
+              <button
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white text-4xl leading-none px-2"
+                onClick={(e) => { e.stopPropagation(); setSelectedImage((i) => Math.min(i + 1, images.length - 1)) }}
+                aria-label="Next image"
+              >
+                ›
+              </button>
+            </>
+          )}
+          <img
+            src={fullImages[selectedImage]}
+            alt={product.name}
+            className="max-h-[90vh] max-w-[90vw] object-contain rounded-lg"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <p className="absolute bottom-4 text-white/60 text-sm">
+            {selectedImage + 1} / {images.length} · Click outside or press Esc to close
+          </p>
+        </div>
+      )}
+
+      {/* ── Breadcrumb ───────────────────────────────────────────────── */}
       <nav className="mb-6 text-sm text-gray-500" aria-label="Breadcrumb">
-        <ol className="flex items-center gap-1.5">
-          <li>
-            <Link to="/products" className="hover:text-emerald-600 transition-colors">
-              Products
-            </Link>
-          </li>
+        <ol className="flex items-center gap-1.5 flex-wrap">
+          <li><Link to="/" className="hover:text-emerald-600 transition-colors">Home</Link></li>
           <li aria-hidden="true">/</li>
-          <li className="capitalize text-gray-400">{product.category}</li>
+          <li><Link to="/products" className="hover:text-emerald-600 transition-colors">Products</Link></li>
           <li aria-hidden="true">/</li>
-          <li className="text-gray-700 font-medium truncate max-w-[200px]">
-            {product.name}
-          </li>
+          <li><Link to={`/products?category=${product.category}`} className="capitalize hover:text-emerald-600 transition-colors">{product.category}</Link></li>
+          <li aria-hidden="true">/</li>
+          <li className="text-gray-700 font-medium truncate max-w-[200px]">{product.name}</li>
         </ol>
       </nav>
 
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-2">
         {/* ── Images ─────────────────────────────────────────────────── */}
         <div className="space-y-3">
-          {/* Main image */}
-          <div className="overflow-hidden rounded-xl border border-gray-200 bg-gray-100 aspect-4/3">
+          {/* Main image — click to open lightbox */}
+          <button
+            className="w-full overflow-hidden rounded-xl border border-gray-200 bg-gray-100 aspect-4/3 cursor-zoom-in relative group"
+            onClick={() => setLightboxOpen(true)}
+            aria-label="View full size image"
+          >
             <img
-              src={fullImages[selectedImage]}
+              src={displayImages[selectedImage]}
               alt={product.name}
               fetchPriority="high"
-              className="h-full w-full object-cover"
+              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
-          </div>
+            <span className="absolute bottom-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+              🔍 Zoom
+            </span>
+          </button>
 
           {/* Thumbnails */}
           {images.length > 1 && (
@@ -197,17 +259,10 @@ export default function ProductDetailPage() {
                   aria-pressed={selectedImage === i}
                   className={[
                     'shrink-0 h-16 w-16 rounded-lg overflow-hidden border-2 transition-colors',
-                    selectedImage === i
-                      ? 'border-emerald-500'
-                      : 'border-transparent hover:border-gray-300',
+                    selectedImage === i ? 'border-emerald-500' : 'border-transparent hover:border-gray-300',
                   ].join(' ')}
                 >
-                  <img
-                    src={thumbImages[i]}
-                    alt=""
-                    loading="lazy"
-                    className="h-full w-full object-cover"
-                  />
+                  <img src={thumbImages[i]} alt="" loading="lazy" className="h-full w-full object-cover" />
                 </button>
               ))}
             </div>
@@ -218,20 +273,19 @@ export default function ProductDetailPage() {
         <div className="space-y-5">
           {/* Category + name */}
           <div>
-            <p className="text-sm font-medium uppercase tracking-wide text-emerald-500">
+            <Link
+              to={`/products?category=${product.category}`}
+              className="text-sm font-medium uppercase tracking-wide text-emerald-500 hover:text-emerald-600"
+            >
               {product.category}
-            </p>
+            </Link>
             <h1 className="mt-1 text-2xl font-bold text-gray-900 leading-snug">
               {product.name}
             </h1>
           </div>
 
           {/* Rating */}
-          <StarRating
-            average={product.ratings.average}
-            count={product.ratings.count}
-            size="md"
-          />
+          <StarRating average={product.ratings.average} count={product.ratings.count} size="md" />
 
           {/* Price */}
           <p className="text-3xl font-bold text-gray-900">
@@ -241,88 +295,159 @@ export default function ProductDetailPage() {
           {/* Stock status */}
           <div className="flex items-center gap-2 text-sm">
             {outOfStock ? (
-              <span className="font-medium text-red-600">Out of stock</span>
+              <span className="inline-flex items-center gap-1.5 font-medium text-red-600">
+                <span className="h-2 w-2 rounded-full bg-red-500" aria-hidden="true" />
+                Out of stock
+              </span>
             ) : (
-              <>
-                <span className="h-2 w-2 rounded-full bg-green-500" aria-hidden="true" />
-                <span className="text-gray-600">
-                  {refreshing ? (
-                    <span className="inline-flex items-center gap-1">
-                      <Spinner size="sm" /> Checking stock…
-                    </span>
-                  ) : (
-                    <>
-                      <span className="font-medium text-gray-900">{stock}</span> in stock
-                      {cartQuantity > 0 && (
-                        <span className="ml-1 text-gray-400">
-                          ({cartQuantity} in your cart)
-                        </span>
-                      )}
-                    </>
-                  )}
-                </span>
-              </>
+              <span className="inline-flex items-center gap-1.5 text-gray-600">
+                <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true" />
+                {refreshing ? (
+                  <span className="inline-flex items-center gap-1"><Spinner size="sm" /> Checking…</span>
+                ) : stock <= 5 ? (
+                  <span className="font-semibold text-amber-600">Only {stock} left in stock — order soon</span>
+                ) : (
+                  <>
+                    <span className="font-medium text-emerald-700">In Stock</span>
+                    {cartQuantity > 0 && <span className="text-gray-400">({cartQuantity} in cart)</span>}
+                  </>
+                )}
+              </span>
             )}
           </div>
 
           {/* Description */}
-          <p className="text-sm text-gray-600 leading-relaxed">
+          <p className="text-sm text-gray-600 leading-relaxed border-t border-gray-100 pt-4">
             {product.description}
           </p>
 
-          {/* Add to cart */}
-          <Button
-            size="lg"
-            className="w-full sm:w-auto"
-            disabled={outOfStock || !canAddMore}
-            isLoading={addingToCart}
-            onClick={() => void handleAddToCart()}
-          >
-            {outOfStock
-              ? 'Out of stock'
-              : !canAddMore
-              ? 'Max quantity in cart'
-              : 'Add to cart'}
-          </Button>
-
-          {!canAddMore && !outOfStock && (
-            <p className="text-xs text-amber-600">
-              You already have the maximum available quantity in your cart.
-            </p>
+          {/* Add to cart / Out of stock */}
+          {outOfStock ? (
+            <div className="space-y-3">
+              <Button size="lg" className="w-full" disabled>
+                Out of stock
+              </Button>
+              <p className="text-xs text-gray-500 text-center">
+                💌 Want to be notified when this is back?{' '}
+                <a href="mailto:support@byafa.com?subject=Restock notification" className="text-emerald-600 hover:underline">
+                  Email us
+                </a>
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <Button
+                size="lg"
+                className="w-full"
+                disabled={!canAddMore}
+                isLoading={addingToCart}
+                onClick={() => void handleAddToCart()}
+              >
+                {!canAddMore ? 'Max quantity in cart' : 'Add to cart'}
+              </Button>
+              {!canAddMore && (
+                <p className="text-xs text-amber-600 text-center">
+                  You have the maximum available quantity in your cart.
+                </p>
+              )}
+            </div>
           )}
+
+          {/* Trust signals */}
+          <div className="border-t border-gray-100 pt-4 space-y-2">
+            <p className="text-xs text-gray-500 flex items-center gap-2">
+              <span>🔒</span> Secure checkout via Stripe — card details never stored
+            </p>
+            <p className="text-xs text-gray-500 flex items-center gap-2">
+              <span>📦</span> Real-time order tracking from your account
+            </p>
+            <p className="text-xs text-gray-500 flex items-center gap-2">
+              <span>⭐</span> Reviews from verified purchasers only
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* ── Reviews ──────────────────────────────────────────────────── */}
-      <div className="mt-12 space-y-6">
-        <h2 className="text-xl font-bold text-gray-900">
-          Customer reviews
-          {reviews.length > 0 && (
-            <span className="ml-2 text-base font-normal text-gray-400">
-              ({reviews.length})
-            </span>
-          )}
-        </h2>
+      {/* ── Related products ─────────────────────────────────────────── */}
+      {relatedProducts.length > 0 && (
+        <div className="mt-14">
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-xl font-bold text-gray-900">You might also like</h2>
+            <Link
+              to={`/products?category=${product.category}`}
+              className="text-sm font-medium text-emerald-600 hover:text-emerald-500 transition-colors"
+            >
+              View all {product.category} →
+            </Link>
+          </div>
+          <ul className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {relatedProducts.map((p) => (
+              <li key={p._id}>
+                <ProductCard product={p} />
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
-        {/* Review form — only for users who purchased this product */}
+      {/* ── Reviews ──────────────────────────────────────────────────── */}
+      <div className="mt-14 space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-bold text-gray-900">
+            Customer reviews
+            {reviews.length > 0 && (
+              <span className="ml-2 text-base font-normal text-gray-400">({reviews.length})</span>
+            )}
+          </h2>
+          {product.ratings.count > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="text-2xl font-bold text-gray-900">{product.ratings.average.toFixed(1)}</span>
+              <StarRating average={product.ratings.average} count={product.ratings.count} />
+            </div>
+          )}
+        </div>
+
         {eligibleOrderId && (
-          <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-6 space-y-3">
-            <h3 className="text-sm font-semibold text-gray-900">
-              Write a review
-            </h3>
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-6 space-y-3">
+            <h3 className="text-sm font-semibold text-gray-900">✍️ Write a review</h3>
             <ReviewForm
               productId={product._id}
               orderId={eligibleOrderId}
               onReviewSubmitted={(review) => {
                 setReviews((prev) => [review, ...prev])
-                setEligibleOrderId(null) // hide form after submission
+                setEligibleOrderId(null)
               }}
             />
           </div>
         )}
 
-        <ReviewList reviews={reviews} />
+        {reviews.length === 0 ? (
+          <div className="rounded-xl border border-gray-200 bg-white p-8 text-center">
+            <p className="text-gray-500 text-sm">No reviews yet. Be the first to review this product!</p>
+          </div>
+        ) : (
+          <ReviewList reviews={reviews} />
+        )}
       </div>
+
+      {/* ── Sticky mobile Add to Cart bar ────────────────────────────── */}
+      <div className="fixed bottom-0 left-0 right-0 z-30 md:hidden bg-white border-t border-gray-200 px-4 py-3 flex items-center gap-3 shadow-lg">
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-gray-900 truncate">{product.name}</p>
+          <p className="text-sm font-bold text-emerald-600">{formatCurrency(product.price)}</p>
+        </div>
+        <Button
+          size="md"
+          disabled={outOfStock || !canAddMore}
+          isLoading={addingToCart}
+          onClick={() => void handleAddToCart()}
+          className="shrink-0"
+        >
+          {outOfStock ? 'Out of stock' : !canAddMore ? 'Max qty' : 'Add to cart'}
+        </Button>
+      </div>
+      {/* Spacer so sticky bar doesn't cover content on mobile */}
+      <div className="h-20 md:hidden" aria-hidden="true" />
     </>
   )
 }
