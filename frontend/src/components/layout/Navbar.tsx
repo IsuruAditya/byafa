@@ -120,7 +120,7 @@ export function Navbar() {
                 <span className="text-xl font-bold text-emerald-600 tracking-tight">Byafa</span>
             ─────────────────────────────────────────────────────────────────── */}
             <Link to="/" className="shrink-0">
-              <img src="/logo.png" alt="Byafa" className="h-8 w-auto" />
+              <img src="/logo.png" alt="Byafa" className="h-11 w-auto" />
             </Link>
 
             {/* ── Center: Desktop nav links ───────────────────────── */}
@@ -280,7 +280,7 @@ export function Navbar() {
         {/* Drawer header — logo placement same as main header */}
         <div className="flex h-16 items-center justify-between px-5 border-b border-gray-200 shrink-0">
           <Link to="/" onClick={closeDrawer} className="shrink-0">
-            <img src="/logo.png" alt="Byafa" className="h-8 w-auto" />
+            <img src="/logo.png" alt="Byafa" className="h-11 w-auto" />
           </Link>
           <button
             onClick={closeDrawer}
