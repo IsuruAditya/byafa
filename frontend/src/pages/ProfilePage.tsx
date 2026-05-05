@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../store/hooks'
 import { setCredentials, logout } from '../store/slices/authSlice'
 import { clearCart } from '../store/slices/cartSlice'
-import { updateProfileApi, deleteAccountApi } from '../api/authApi'
+import { updateProfileApi, deleteAccountApi, changePasswordApi } from '../api/authApi'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { Modal } from '../components/ui/Modal'
@@ -17,7 +17,17 @@ const schema = z.object({
   email: z.string().email('Enter a valid email'),
 })
 
+const passwordSchema = z.object({
+  currentPassword: z.string().min(1, 'Current password is required'),
+  newPassword: z.string().min(8, 'New password must be at least 8 characters'),
+  confirmPassword: z.string().min(1, 'Please confirm your new password'),
+}).refine((d) => d.newPassword === d.confirmPassword, {
+  message: 'Passwords do not match',
+  path: ['confirmPassword'],
+})
+
 type FormValues = z.infer<typeof schema>
+type PasswordFormValues = z.infer<typeof passwordSchema>
 
 export default function ProfilePage() {
   const dispatch = useAppDispatch()
@@ -43,6 +53,26 @@ export default function ProfilePage() {
   useEffect(() => {
     if (user) reset({ name: user.name, email: user.email })
   }, [user, reset])
+
+  const {
+    register: registerPw,
+    handleSubmit: handleSubmitPw,
+    reset: resetPw,
+    setError: setErrorPw,
+    formState: { errors: pwErrors, isSubmitting: isPwSubmitting, isSubmitSuccessful: isPwSubmitSuccessful },
+  } = useForm<PasswordFormValues>({ resolver: zodResolver(passwordSchema) })
+
+  async function onPasswordSubmit(values: PasswordFormValues) {
+    try {
+      await changePasswordApi({ currentPassword: values.currentPassword, newPassword: values.newPassword })
+      resetPw()
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        const message: string = err.response?.data?.message ?? 'Failed to change password.'
+        setErrorPw('root', { message })
+      }
+    }
+  }
 
   async function onSubmit(values: FormValues) {
     try {

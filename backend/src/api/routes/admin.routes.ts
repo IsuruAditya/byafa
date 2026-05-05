@@ -78,6 +78,9 @@ router.patch(
 
 // ── Orders ────────────────────────────────────────────────────────────────────
 
+// GET /api/v1/admin/orders/:id — single order detail
+router.get('/orders/:id', adminController.getAdminOrderById)
+
 // GET /api/v1/admin/orders
 router.get(
   '/orders',

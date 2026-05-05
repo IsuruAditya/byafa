@@ -60,6 +60,20 @@ router.patch(
   authController.updateProfile
 )
 
+// PATCH /api/v1/auth/password  (protected)
+router.patch(
+  '/password',
+  authMiddleware,
+  [
+    body('currentPassword').notEmpty().withMessage('Current password is required'),
+    body('newPassword')
+      .isLength({ min: 8 })
+      .withMessage('New password must be at least 8 characters'),
+  ],
+  validate,
+  authController.changePassword
+)
+
 // DELETE /api/v1/auth/account  (protected)
 router.delete('/account', authMiddleware, authController.deleteAccount)
 

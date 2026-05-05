@@ -4,6 +4,7 @@ import { AdminLayout } from './components/layout/AdminLayout'
 import { ProtectedRoute } from './components/guards/ProtectedRoute'
 import { AdminRoute } from './components/guards/AdminRoute'
 import HomePage from './pages/HomePage'
+import NotFoundPage from './pages/NotFoundPage'
 import RegisterPage from './features/auth/RegisterPage'
 import LoginPage from './features/auth/LoginPage'
 import ProfilePage from './pages/ProfilePage'
@@ -19,11 +20,6 @@ import ProductDetailPage from './features/products/ProductDetailPage'
 import CartPage from './features/cart/CartPage'
 import CheckoutPage from './features/checkout/CheckoutPage'
 import CheckoutCompletePage from './features/checkout/CheckoutCompletePage'
-
-// Placeholder pages — replaced as stories are implemented
-function NotFoundPage() {
-  return <div>404 — Page not found</div>
-}
 
 export default function App() {
   return (
@@ -63,8 +59,7 @@ export default function App() {
             </Route>
           </Route>
 
-          <Route path="*" element={<NotFoundPage />} />
-        </Route>
+          <Route path="*" element={<NotFoundPage />} />        </Route>
       </Routes>
     </BrowserRouter>
   )

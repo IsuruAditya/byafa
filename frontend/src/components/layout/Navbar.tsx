@@ -262,6 +262,25 @@ export function Navbar() {
           </div>
         </div>
 
+        {/* ── Row 1.5: Mobile search bar ─────────────────────────────── */}
+        <div className="md:hidden border-b border-gray-100 px-4 py-2 bg-white">
+          <form onSubmit={handleSearch} role="search">
+            <div className="flex rounded-full border-2 border-gray-200 overflow-hidden focus-within:border-emerald-500 bg-gray-50">
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search products…"
+                className="flex-1 px-4 py-2 text-sm text-gray-900 placeholder:text-gray-400 bg-transparent focus:outline-none"
+                aria-label="Search products"
+              />
+              <button type="submit" className="px-4 bg-emerald-600 text-white flex items-center justify-center" aria-label="Search">
+                <SearchIcon />
+              </button>
+            </div>
+          </form>
+        </div>
+
         {/* ── Row 2: Category nav — desktop only ───────────────────── */}
         <nav
           className="hidden md:block border-b border-gray-100 bg-white"

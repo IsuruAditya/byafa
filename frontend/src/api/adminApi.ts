@@ -55,6 +55,11 @@ export interface AdminOrderParams {
   pageSize?: number
 }
 
+export async function adminGetOrderByIdApi(id: string): Promise<ApiResponse<Order>> {
+  const { data } = await axiosInstance.get<ApiResponse<Order>>(`/admin/orders/${id}`)
+  return data
+}
+
 export async function adminGetOrdersApi(
   params: AdminOrderParams
 ): Promise<PaginatedResponse<Order>> {

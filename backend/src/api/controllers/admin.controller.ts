@@ -58,6 +58,11 @@ export async function updateInventory(req: Request, res: Response): Promise<void
 
 // ── Orders ──────────────────────────────────────────────────────────────────
 
+export async function getAdminOrderById(req: Request, res: Response): Promise<void> {
+  const order = await adminService.getAdminOrderById(req.params['id'] as string)
+  res.status(200).json({ success: true, data: order })
+}
+
 export async function getAdminOrders(req: Request, res: Response): Promise<void> {
   const { search, status, from, to, page, pageSize } =
     req.query as Record<string, string | undefined>

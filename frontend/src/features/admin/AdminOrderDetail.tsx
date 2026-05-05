@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { getMyOrderByIdApi } from '../../api/ordersApi'
-import { adminUpdateOrderStatusApi, adminIssueRefundApi } from '../../api/adminApi'
+import { adminUpdateOrderStatusApi, adminIssueRefundApi, adminGetOrderByIdApi } from '../../api/adminApi'
 import type { Order, OrderStatus } from '../../types/order.types'
 import { formatCurrency } from '../../utils/formatCurrency'
 import { Button } from '../../components/ui/Button'
@@ -26,9 +25,7 @@ export default function AdminOrderDetail() {
 
   useEffect(() => {
     if (!id) return
-    // Reuse the customer endpoint — admin can access any order via admin routes
-    // For simplicity we use the same endpoint; in production you'd use /admin/orders/:id
-    getMyOrderByIdApi(id)
+    adminGetOrderByIdApi(id)
       .then((res) => {
         if (res.success && res.data) {
           setOrder(res.data)

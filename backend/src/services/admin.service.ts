@@ -101,6 +101,17 @@ export interface AdminOrderQuery {
   pageSize?: number
 }
 
+export async function getAdminOrderById(orderId: string) {
+  if (!orderId.match(/^[a-f\d]{24}$/i)) {
+    throw new AppError('Order not found', 404)
+  }
+  const order = await Order.findById(orderId)
+    .populate('userId', 'name email')
+    .lean()
+  if (!order) throw new AppError('Order not found', 404)
+  return order
+}
+
 export async function getAdminOrders(query: AdminOrderQuery) {
   const { search, status, from, to, page = 1, pageSize = 20 } = query
 

@@ -107,6 +107,18 @@ export async function updateProfile(req: Request, res: Response): Promise<void> 
   })
 }
 
+export async function changePassword(req: Request, res: Response): Promise<void> {
+  const userId = req.user!.id as string
+  const { currentPassword, newPassword } = req.body as {
+    currentPassword: string
+    newPassword: string
+  }
+
+  await authService.changePassword(userId, currentPassword, newPassword)
+
+  res.status(200).json({ success: true, message: 'Password changed successfully' })
+}
+
 export async function deleteAccount(req: Request, res: Response): Promise<void> {
   const userId = req.user!.id as string
 

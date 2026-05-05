@@ -160,3 +160,18 @@ export async function deleteAccount(userId: string): Promise<void> {
   // Delete the user document
   await User.findByIdAndDelete(userId)
 }
+
+export async function changePassword(
+  userId: string,
+  currentPassword: string,
+  newPassword: string
+): Promise<void> {
+  const user = await User.findById(userId)
+  if (!user) throw new AppError('User not found', 404)
+
+  const isMatch = await user.comparePassword(currentPassword)
+  if (!isMatch) throw new AppError('Current password is incorrect', 400)
+
+  user.password = newPassword
+  await user.save() // pre-save hook re-hashes the password
+}

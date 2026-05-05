@@ -1,0 +1,58 @@
+services:
+  # ── Backend — Node.js Web Service ──────────────────────────────────────────
+  - type: web
+    name: simple-ecommerce-api
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000          # Render assigns this port automatically
+      - key: MONGO_URI
+        sync: false           # Set manually in Render dashboard
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_REFRESH_SECRET
+        sync: false
+      - key: JWT_EXPIRES_IN
+        value: 15m
+      - key: JWT_REFRESH_EXPIRES_IN
+        value: 7d
+      - key: CLIENT_URL
+        sync: false           # Set to your frontend Render URL after deploy
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASS
+        sync: false
+
+  # ── Frontend — Static Site ──────────────────────────────────────────────────
+  - type: web
+    name: simple-ecommerce
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    plan: free
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html   # SPA client-side routing fallback
+    envVars:
+      - key: VITE_API_URL
+        sync: false                # Set to your backend Render URL + /api/v1
+      - key: VITE_STRIPE_PUBLISHABLE_KEY
+        sync: false

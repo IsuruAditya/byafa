@@ -1,20 +1,14 @@
 import { useEffect, useState } from 'react'
 import { useAppDispatch } from '../../store/hooks'
 import { setCredentials } from '../../store/slices/authSlice'
+import { mergeCart } from '../../store/slices/cartSlice'
 import { getMeApi } from '../../api/authApi'
 import { store } from '../../store'
 import axios from 'axios'
 
 /**
  * Runs once on app mount. Calls GET /auth/me to rehydrate auth state.
- *
- * Flow:
- *  1. GET /auth/me — Axios attaches access token from Redux if present
- *  2. If 401 → Axios interceptor calls POST /auth/refresh via httpOnly cookie,
- *     stores the new access token in Redux via updateAccessToken, retries /me
- *  3. If refresh also fails → interceptor dispatches logout(), user stays logged out
- *  4. `isInitializing` stays true until the check settles, preventing a flash
- *     of unauthenticated UI on reload
+ * Also merges any guest cart items into the authenticated session on login.
  */
 export function useAuthInit() {
   const dispatch = useAppDispatch()
@@ -27,8 +21,6 @@ export function useAuthInit() {
       try {
         const res = await getMeApi()
         if (!cancelled && res.success && res.data) {
-          // Read the token from the store at this moment — the interceptor may
-          // have already called updateAccessToken with a refreshed token by now
           const currentToken = store.getState().auth.accessToken ?? ''
           dispatch(
             setCredentials({
@@ -36,10 +28,15 @@ export function useAuthInit() {
               accessToken: currentToken,
             })
           )
+          // Merge guest cart into authenticated session
+          // Guest items already in localStorage are preserved — mergeCart
+          // only adds server items that aren't already in the local cart
+          const guestItems = store.getState().cart.items
+          if (guestItems.length > 0) {
+            dispatch(mergeCart(guestItems))
+          }
         }
       } catch (err) {
-        // 401 after failed refresh → interceptor already dispatched logout()
-        // Any other network error → stay logged out silently
         if (!axios.isAxiosError(err) || err.response?.status !== 401) {
           console.error('Auth init error:', err)
         }
@@ -52,7 +49,7 @@ export function useAuthInit() {
     return () => {
       cancelled = true
     }
-  }, []) // run once on mount only — dispatch is stable
+  }, [])
 
   return { isInitializing }
 }

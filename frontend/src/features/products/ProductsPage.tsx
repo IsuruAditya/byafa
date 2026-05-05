@@ -7,7 +7,7 @@ import type { PaginatedResponse } from '../../types/api.types'
 import { useDebounce } from '../../hooks/useDebounce'
 import { ProductCard } from './ProductCard'
 import { Pagination } from '../../components/ui/Pagination'
-import { Spinner } from '../../components/ui/Spinner'
+import { ProductGridSkeleton } from '../../components/ui/ProductCardSkeleton'
 
 const CATEGORIES = ['all', 'electronics', 'clothing', 'books', 'home', 'sports']
 
@@ -152,9 +152,7 @@ export default function ProductsPage() {
 
       {/* Content */}
       {loading ? (
-        <div className="flex justify-center py-20">
-          <Spinner size="lg" />
-        </div>
+        <ProductGridSkeleton count={12} />
       ) : error ? (
         <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center">
           <p className="text-sm text-red-600">{error}</p>

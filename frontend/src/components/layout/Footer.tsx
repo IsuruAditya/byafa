@@ -53,6 +53,42 @@ export function Footer() {
             <span className="text-xs text-gray-400">Secure payments by Stripe</span>
           </div>
         </div>
+
+        {/* Newsletter signup */}
+        <div className="border-t border-gray-100 pt-8 mb-8">
+          <div className="max-w-md">
+            <h3 className="text-sm font-semibold text-gray-900 mb-1">Stay in the loop</h3>
+            <p className="text-xs text-gray-500 mb-3">Get new arrivals, exclusive deals and updates delivered to your inbox.</p>
+            <form
+              onSubmit={(e) => { e.preventDefault(); alert('Thanks for subscribing!') }}
+              className="flex gap-2"
+            >
+              <input
+                type="email"
+                placeholder="Enter your email"
+                required
+                className="flex-1 rounded-full border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+                aria-label="Email for newsletter"
+              />
+              <button
+                type="submit"
+                className="rounded-full bg-emerald-600 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors whitespace-nowrap"
+              >
+                Subscribe
+              </button>
+            </form>
+          </div>
+        </div>
+
+        {/* Bottom bar */}
+        <div className="border-t border-gray-100 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p className="text-xs text-gray-400">
+            © {new Date().getFullYear()} Byafa. All rights reserved.
+          </p>
+          <div className="flex items-center gap-5">
+            <span className="text-xs text-gray-400">🔒 Secure payments by Stripe</span>
+          </div>
+        </div>
       </div>
     </footer>
   )

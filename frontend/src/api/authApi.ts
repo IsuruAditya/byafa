@@ -56,3 +56,11 @@ export async function deleteAccountApi(): Promise<ApiResponse> {
   const { data } = await axiosInstance.delete<ApiResponse>('/auth/account')
   return data
 }
+
+export async function changePasswordApi(payload: {
+  currentPassword: string
+  newPassword: string
+}): Promise<ApiResponse> {
+  const { data } = await axiosInstance.patch<ApiResponse>('/auth/password', payload)
+  return data
+}
