@@ -93,45 +93,34 @@ export default function ProductsPage() {
       </Helmet>
 
       {/* Page header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Products</h1>
-        {pagination && !loading && (
-          <p className="mt-1 text-sm text-gray-500">
-            {pagination.total} product{pagination.total !== 1 ? 's' : ''} found
-          </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">
+            {search ? `Results for "${search}"` : 'Products'}
+          </h1>
+          {pagination && !loading && (
+            <p className="mt-1 text-sm text-gray-500">
+              {pagination.total} product{pagination.total !== 1 ? 's' : ''} found
+            </p>
+          )}
+        </div>
+        {search && (
+          <button
+            onClick={() => { setSearch(''); setPage(1) }}
+            className="text-sm text-emerald-600 hover:underline"
+          >
+            Clear search ×
+          </button>
         )}
       </div>
 
-      {/* Filters bar */}
+      {/* Filters bar — sort + category only, search is in navbar */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        {/* Search */}
-        <div className="relative w-full sm:max-w-xs">
-          <svg
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-            aria-hidden="true"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
-          </svg>
-          <input
-            type="search"
-            placeholder="Search products…"
-            value={search}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            className="w-full rounded-md border border-gray-300 py-2 pl-9 pr-3 text-sm shadow-sm placeholder:text-gray-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            aria-label="Search products"
-          />
-        </div>
-
         {/* Sort */}
         <select
           value={sortBy}
           onChange={(e) => handleSortChange(e.target.value as SortOption)}
-          className="rounded-md border border-gray-300 py-2 pl-3 pr-8 text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          className="rounded-md border border-gray-300 py-2 pl-3 pr-8 text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 w-full sm:w-auto"
           aria-label="Sort products"
         >
           {SORT_OPTIONS.map((o) => (
