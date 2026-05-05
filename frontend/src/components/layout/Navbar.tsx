@@ -7,6 +7,14 @@ import { logoutApi } from '../../api/authApi'
 
 // ── Icons ────────────────────────────────────────────────────────────────────
 
+function SearchIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+    </svg>
+  )
+}
+
 function CartIcon() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} aria-hidden="true">
@@ -47,17 +55,15 @@ function ChevronDownIcon() {
   )
 }
 
-// ── Nav link active style helper ─────────────────────────────────────────────
+// ── Nav link style ────────────────────────────────────────────────────────────
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   [
-    'text-sm font-medium transition-colors',
-    isActive
-      ? 'text-emerald-600'
-      : 'text-gray-600 hover:text-gray-900',
+    'text-sm font-medium transition-colors whitespace-nowrap',
+    isActive ? 'text-emerald-600' : 'text-gray-600 hover:text-gray-900',
   ].join(' ')
 
-// ── Main component ────────────────────────────────────────────────────────────
+// ── Component ─────────────────────────────────────────────────────────────────
 
 export function Navbar() {
   const dispatch = useAppDispatch()
@@ -69,6 +75,7 @@ export function Navbar() {
 
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [accountOpen, setAccountOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
   const accountRef = useRef<HTMLDivElement>(null)
 
   // Close account dropdown on outside click
@@ -82,16 +89,16 @@ export function Navbar() {
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
 
-  // Close drawer on Escape
+  // Close drawer / dropdowns on Escape
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') setDrawerOpen(false)
+      if (e.key === 'Escape') { setDrawerOpen(false); setAccountOpen(false) }
     }
     document.addEventListener('keydown', handleKey)
     return () => document.removeEventListener('keydown', handleKey)
   }, [])
 
-  // Prevent body scroll when drawer is open
+  // Lock body scroll when drawer open
   useEffect(() => {
     document.body.style.overflow = drawerOpen ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
@@ -106,44 +113,64 @@ export function Navbar() {
     navigate('/', { replace: true })
   }
 
+  function handleSearch(e: React.FormEvent) {
+    e.preventDefault()
+    const q = searchQuery.trim()
+    if (q) {
+      navigate(`/products?search=${encodeURIComponent(q)}`)
+      setSearchQuery('')
+      setDrawerOpen(false)
+    }
+  }
+
   const closeDrawer = () => setDrawerOpen(false)
 
   return (
     <>
-      {/* ── Header bar ──────────────────────────────────────────────── */}
+      {/* ── Announcement bar (Amazon / ASOS pattern) ─────────────── */}
+      <div className="bg-emerald-600 text-white text-xs font-medium text-center py-2 px-4">
+        🚚 Free shipping on orders over $50 &nbsp;·&nbsp; Secure checkout via Stripe
+      </div>
+
+      {/* ── Main header ─────────────────────────────────────────────── */}
       <header className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between gap-4">
 
-            {/* ── Left: Logo ──────────────────────────────────────────────────────
-                LOGO PLACEMENT: To swap back to text, replace the img tag with:
-                <span className="text-xl font-bold text-emerald-600 tracking-tight">Byafa</span>
-            ─────────────────────────────────────────────────────────────────── */}
-            <Link to="/" className="shrink-0">
+          {/* ── Row 1: Logo + Search + Actions ──────────────────────── */}
+          <div className="flex h-16 items-center gap-4">
+
+            {/* Logo — top-left, always visible */}
+            <Link to="/" className="shrink-0 mr-2">
               <img src="/logo.png" alt="Byafa" className="h-11 w-auto" />
             </Link>
 
-            {/* ── Center: Desktop nav links ───────────────────────── */}
-            <nav
-              className="hidden md:flex items-center gap-8"
-              aria-label="Main navigation"
+            {/* Search bar — center, prominent (Amazon/ASOS pattern) */}
+            <form
+              onSubmit={handleSearch}
+              className="hidden md:flex flex-1 max-w-xl"
+              role="search"
             >
-              <NavLink to="/products" className={navLinkClass}>
-                Shop
-              </NavLink>
-              <NavLink to="/products?category=electronics" className={navLinkClass}>
-                Electronics
-              </NavLink>
-              <NavLink to="/products?category=clothing" className={navLinkClass}>
-                Clothing
-              </NavLink>
-              <NavLink to="/products?category=home" className={navLinkClass}>
-                Home
-              </NavLink>
-            </nav>
+              <div className="flex w-full rounded-full border border-gray-300 overflow-hidden focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all">
+                <input
+                  type="search"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search products…"
+                  className="flex-1 px-4 py-2 text-sm text-gray-900 placeholder:text-gray-400 bg-white focus:outline-none"
+                  aria-label="Search products"
+                />
+                <button
+                  type="submit"
+                  className="px-4 bg-emerald-600 hover:bg-emerald-700 text-white transition-colors flex items-center justify-center"
+                  aria-label="Submit search"
+                >
+                  <SearchIcon />
+                </button>
+              </div>
+            </form>
 
-            {/* ── Right: Actions ──────────────────────────────────── */}
-            <div className="flex items-center gap-1 sm:gap-2">
+            {/* Right actions */}
+            <div className="flex items-center gap-1 ml-auto md:ml-0">
 
               {/* Cart */}
               <Link
@@ -156,14 +183,14 @@ export function Navbar() {
                   <span
                     aria-live="polite"
                     aria-atomic="true"
-                    className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-600 text-[10px] font-bold text-white"
+                    className="absolute -top-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-[10px] font-bold text-white"
                   >
                     {cartCount > 99 ? '99+' : cartCount}
                   </span>
                 )}
               </Link>
 
-              {/* Account — desktop only */}
+              {/* Account dropdown — desktop */}
               <div className="relative hidden md:block" ref={accountRef}>
                 {isAuthenticated ? (
                   <>
@@ -174,50 +201,35 @@ export function Navbar() {
                       aria-haspopup="true"
                     >
                       <UserIcon />
-                      <span className="max-w-[100px] truncate">{user?.name}</span>
+                      <span className="max-w-[90px] truncate hidden lg:inline">{user?.name}</span>
                       <ChevronDownIcon />
                     </button>
 
-                    {/* Dropdown */}
                     {accountOpen && (
-                      <div className="absolute right-0 mt-2 w-48 rounded-xl border border-gray-200 bg-white shadow-lg py-1 z-50">
-                        <div className="px-4 py-2 border-b border-gray-100">
-                          <p className="text-xs font-medium text-gray-500 truncate">{user?.email}</p>
+                      <div className="absolute right-0 mt-2 w-52 rounded-xl border border-gray-200 bg-white shadow-xl py-1 z-50">
+                        <div className="px-4 py-3 border-b border-gray-100">
+                          <p className="text-sm font-semibold text-gray-900 truncate">{user?.name}</p>
+                          <p className="text-xs text-gray-500 truncate">{user?.email}</p>
                           {user?.role === 'admin' && (
-                            <span className="inline-block mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
+                            <span className="inline-block mt-1 text-[10px] font-semibold uppercase tracking-wide text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
                               Admin
                             </span>
                           )}
                         </div>
-                        <Link
-                          to="/orders"
-                          onClick={() => setAccountOpen(false)}
-                          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                        >
-                          My orders
+                        <Link to="/orders" onClick={() => setAccountOpen(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                          📦 My orders
                         </Link>
-                        <Link
-                          to="/profile"
-                          onClick={() => setAccountOpen(false)}
-                          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                        >
-                          Profile
+                        <Link to="/profile" onClick={() => setAccountOpen(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                          👤 Profile
                         </Link>
                         {user?.role === 'admin' && (
-                          <Link
-                            to="/admin"
-                            onClick={() => setAccountOpen(false)}
-                            className="flex items-center gap-2 px-4 py-2 text-sm text-emerald-600 hover:bg-emerald-50 transition-colors"
-                          >
-                            Admin dashboard
+                          <Link to="/admin" onClick={() => setAccountOpen(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm text-emerald-600 font-medium hover:bg-emerald-50 transition-colors">
+                            ⚙️ Admin dashboard
                           </Link>
                         )}
                         <div className="border-t border-gray-100 mt-1 pt-1">
-                          <button
-                            onClick={handleLogout}
-                            className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                          >
-                            Sign out
+                          <button onClick={handleLogout} className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                            🚪 Sign out
                           </button>
                         </div>
                       </div>
@@ -225,16 +237,10 @@ export function Navbar() {
                   </>
                 ) : (
                   <div className="flex items-center gap-2">
-                    <Link
-                      to="/login"
-                      className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors px-3 py-2"
-                    >
+                    <Link to="/login" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors px-3 py-2">
                       Sign in
                     </Link>
-                    <Link
-                      to="/register"
-                      className="inline-flex items-center justify-center rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors"
-                    >
+                    <Link to="/register" className="inline-flex items-center justify-center rounded-full bg-emerald-600 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors">
                       Register
                     </Link>
                   </div>
@@ -252,32 +258,56 @@ export function Navbar() {
               </button>
             </div>
           </div>
+
+          {/* ── Row 2: Category nav links — desktop only ─────────────── */}
+          <nav
+            className="hidden md:flex items-center gap-1 h-10 border-t border-gray-100"
+            aria-label="Category navigation"
+          >
+            {[
+              { to: '/products', label: 'All Products' },
+              { to: '/products?category=electronics', label: 'Electronics' },
+              { to: '/products?category=clothing', label: 'Clothing' },
+              { to: '/products?category=home', label: 'Home & Living' },
+              { to: '/products?category=books', label: 'Books' },
+              { to: '/products?category=sports', label: 'Sports' },
+            ].map(({ to, label }) => (
+              <NavLink
+                key={to}
+                to={to}
+                className={({ isActive }) =>
+                  [
+                    'px-3 py-1.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap',
+                    isActive
+                      ? 'text-emerald-600 bg-emerald-50'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50',
+                  ].join(' ')
+                }
+              >
+                {label}
+              </NavLink>
+            ))}
+          </nav>
         </div>
       </header>
 
       {/* ── Mobile drawer ───────────────────────────────────────────── */}
 
-      {/* Backdrop */}
       {drawerOpen && (
-        <div
-          className="fixed inset-0 z-50 bg-black/40 md:hidden"
-          aria-hidden="true"
-          onClick={closeDrawer}
-        />
+        <div className="fixed inset-0 z-50 bg-black/50 md:hidden" aria-hidden="true" onClick={closeDrawer} />
       )}
 
-      {/* Drawer panel */}
       <div
         role="dialog"
         aria-modal="true"
         aria-label="Navigation menu"
         className={[
-          'fixed inset-y-0 left-0 z-50 w-72 bg-white shadow-xl flex flex-col md:hidden',
+          'fixed inset-y-0 left-0 z-50 w-80 bg-white shadow-2xl flex flex-col md:hidden',
           'transition-transform duration-300 ease-in-out',
           drawerOpen ? 'translate-x-0' : '-translate-x-full',
         ].join(' ')}
       >
-        {/* Drawer header — logo placement same as main header */}
+        {/* Drawer header */}
         <div className="flex h-16 items-center justify-between px-5 border-b border-gray-200 shrink-0">
           <Link to="/" onClick={closeDrawer} className="shrink-0">
             <img src="/logo.png" alt="Byafa" className="h-11 w-auto" />
@@ -291,13 +321,30 @@ export function Navbar() {
           </button>
         </div>
 
-        {/* Drawer nav links */}
-        <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-1" aria-label="Mobile navigation">
-          <p className="px-3 pb-2 text-xs font-semibold uppercase tracking-widest text-gray-400">
-            Shop
-          </p>
+        {/* Mobile search */}
+        <div className="px-4 py-3 border-b border-gray-100">
+          <form onSubmit={handleSearch} role="search">
+            <div className="flex rounded-full border border-gray-300 overflow-hidden focus-within:border-emerald-500">
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search products…"
+                className="flex-1 px-4 py-2 text-sm text-gray-900 placeholder:text-gray-400 bg-white focus:outline-none"
+                aria-label="Search products"
+              />
+              <button type="submit" className="px-4 bg-emerald-600 text-white flex items-center justify-center" aria-label="Search">
+                <SearchIcon />
+              </button>
+            </div>
+          </form>
+        </div>
+
+        {/* Drawer nav */}
+        <nav className="flex-1 overflow-y-auto px-4 py-4 space-y-0.5" aria-label="Mobile navigation">
+          <p className="px-3 pt-2 pb-1.5 text-xs font-semibold uppercase tracking-widest text-gray-400">Shop</p>
           {[
-            { to: '/products', label: 'All products' },
+            { to: '/products', label: 'All Products' },
             { to: '/products?category=electronics', label: 'Electronics' },
             { to: '/products?category=clothing', label: 'Clothing' },
             { to: '/products?category=home', label: 'Home & Living' },
@@ -308,73 +355,51 @@ export function Navbar() {
               key={to}
               to={to}
               onClick={closeDrawer}
-              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-emerald-600 transition-colors"
+              className="flex items-center rounded-lg px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-emerald-600 transition-colors"
             >
               {label}
             </Link>
           ))}
 
           {isAuthenticated && (
-            <div className="pt-4 pb-2">
-              <p className="px-3 pb-2 text-xs font-semibold uppercase tracking-widest text-gray-400">
-                Account
-              </p>
-              <Link
-                to="/orders"
-                onClick={closeDrawer}
-                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-emerald-600 transition-colors"
-              >
-                My orders
+            <>
+              <p className="px-3 pt-4 pb-1.5 text-xs font-semibold uppercase tracking-widest text-gray-400">Account</p>
+              <Link to="/orders" onClick={closeDrawer} className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-emerald-600 transition-colors">
+                📦 My orders
               </Link>
-              <Link
-                to="/profile"
-                onClick={closeDrawer}
-                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-emerald-600 transition-colors"
-              >
-                Profile
+              <Link to="/profile" onClick={closeDrawer} className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-emerald-600 transition-colors">
+                👤 Profile
               </Link>
               {user?.role === 'admin' && (
-                <Link
-                  to="/admin"
-                  onClick={closeDrawer}
-                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-emerald-600 hover:bg-emerald-50 transition-colors"
-                >
-                  Admin dashboard
+                <Link to="/admin" onClick={closeDrawer} className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-emerald-600 hover:bg-emerald-50 transition-colors">
+                  ⚙️ Admin dashboard
                 </Link>
               )}
-            </div>
+            </>
           )}
         </nav>
 
-        {/* Drawer footer — auth actions */}
+        {/* Drawer footer */}
         <div className="shrink-0 border-t border-gray-200 px-4 py-4 space-y-2">
           {isAuthenticated ? (
             <>
-              <div className="px-3 py-2">
-                <p className="text-sm font-medium text-gray-900 truncate">{user?.name}</p>
+              <div className="px-3 py-2 bg-gray-50 rounded-lg">
+                <p className="text-sm font-semibold text-gray-900 truncate">{user?.name}</p>
                 <p className="text-xs text-gray-500 truncate">{user?.email}</p>
               </div>
               <button
                 onClick={handleLogout}
-                className="flex w-full items-center justify-center rounded-lg border border-red-200 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                className="flex w-full items-center justify-center gap-2 rounded-lg border border-red-200 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
               >
                 Sign out
               </button>
             </>
           ) : (
             <>
-              <Link
-                to="/login"
-                onClick={closeDrawer}
-                className="flex w-full items-center justify-center rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-              >
+              <Link to="/login" onClick={closeDrawer} className="flex w-full items-center justify-center rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
                 Sign in
               </Link>
-              <Link
-                to="/register"
-                onClick={closeDrawer}
-                className="flex w-full items-center justify-center rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors"
-              >
+              <Link to="/register" onClick={closeDrawer} className="flex w-full items-center justify-center rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors">
                 Create account
               </Link>
             </>
