@@ -27,7 +27,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
   const canAdd = inStock && cartQuantity < product.stockQuantity
 
   async function handleAddToCart(e: React.MouseEvent) {
-    e.preventDefault() // don't navigate to product page
+    e.preventDefault()
     e.stopPropagation()
     if (!canAdd || adding) return
     setAdding(true)
@@ -42,8 +42,8 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
       })
     )
     dispatch(addToast({ message: `${product.name} added to cart`, type: 'success' }))
-    // Brief visual feedback
-    setTimeout(() => setAdding(false), 600)
+    // Reset after brief feedback window
+    window.setTimeout(() => setAdding(false), 800)
   }
 
   return (

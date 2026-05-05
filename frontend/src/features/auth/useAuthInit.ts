@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useAppDispatch } from '../../store/hooks'
 import { setCredentials } from '../../store/slices/authSlice'
-import { mergeCart } from '../../store/slices/cartSlice'
 import { getMeApi } from '../../api/authApi'
 import { store } from '../../store'
 import axios from 'axios'
@@ -28,13 +27,8 @@ export function useAuthInit() {
               accessToken: currentToken,
             })
           )
-          // Merge guest cart into authenticated session
-          // Guest items already in localStorage are preserved — mergeCart
-          // only adds server items that aren't already in the local cart
-          const guestItems = store.getState().cart.items
-          if (guestItems.length > 0) {
-            dispatch(mergeCart(guestItems))
-          }
+          // Guest cart is already in Redux/localStorage — no merge needed.
+          // The cart persists across login automatically via localStorage rehydration.
         }
       } catch (err) {
         if (!axios.isAxiosError(err) || err.response?.status !== 401) {
