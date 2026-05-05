@@ -1,4 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
 import { useAppSelector } from '../../store/hooks'
 import { CartItemRow } from './CartItemRow'
 import { Button } from '../../components/ui/Button'
@@ -57,6 +58,7 @@ export default function CartPage() {
 
   return (
     <div className="mx-auto max-w-4xl">
+      <Helmet><title>Your Cart | Byafa</title></Helmet>
       <h1 className="text-2xl font-bold text-gray-900 mb-6">
         Your cart{' '}
         <span className="text-base font-normal text-gray-400">

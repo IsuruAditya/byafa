@@ -97,14 +97,21 @@ export default function ProfilePage() {
       </div>
 
       {/* Account info card */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-1">
-        <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-          Account
-        </p>
-        <p className="text-sm text-gray-700">
-          Role:{' '}
-          <span className="font-medium capitalize">{user?.role}</span>
-        </p>
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+        <div className="flex items-center gap-4">
+          <div className="h-14 w-14 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 text-xl font-bold shrink-0">
+            {user?.name?.charAt(0).toUpperCase() ?? '?'}
+          </div>
+          <div className="min-w-0">
+            <p className="text-base font-semibold text-gray-900 truncate">{user?.name}</p>
+            <p className="text-sm text-gray-500 truncate">{user?.email}</p>
+            {user?.role === 'admin' && (
+              <span className="inline-block mt-1 text-[10px] font-semibold uppercase tracking-wide text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                Admin
+              </span>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Edit form */}

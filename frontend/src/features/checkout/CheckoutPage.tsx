@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements } from '@stripe/react-stripe-js'
+import { Helmet } from 'react-helmet-async'
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
 import { clearCart } from '../../store/slices/cartSlice'
 import { addToast } from '../../store/slices/uiSlice'
@@ -107,23 +108,41 @@ export default function CheckoutPage() {
 
   return (
     <div className="mx-auto max-w-4xl">
-      {/* Step indicator */}
+      <Helmet><title>Checkout | Byafa</title></Helmet>
+
+      {/* Step indicator — numbered circles with checkmarks (Shopify/Amazon pattern) */}
       <nav className="mb-8" aria-label="Checkout steps">
-        <ol className="flex items-center gap-2 text-sm">
-          {(['shipping', 'payment'] as Step[]).map((s, i) => (
-            <li key={s} className="flex items-center gap-2">
-              {i > 0 && <span className="text-gray-300" aria-hidden="true">→</span>}
-              <span
-                className={[
-                  'font-medium capitalize',
-                  step === s ? 'text-emerald-600' : 'text-gray-400',
-                ].join(' ')}
-                aria-current={step === s ? 'step' : undefined}
-              >
-                {s}
-              </span>
-            </li>
-          ))}
+        <ol className="flex items-center">
+          {(['shipping', 'payment'] as Step[]).map((s, i) => {
+            const isCompleted = (s === 'shipping' && step === 'payment')
+            const isActive = step === s
+            return (
+              <li key={s} className="flex items-center flex-1 last:flex-none">
+                <div className="flex items-center gap-2.5">
+                  <div className={[
+                    'flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold border-2 transition-colors shrink-0',
+                    isCompleted ? 'bg-emerald-600 border-emerald-600 text-white' :
+                    isActive ? 'border-emerald-600 text-emerald-600 bg-white' :
+                    'border-gray-300 text-gray-400 bg-white',
+                  ].join(' ')}>
+                    {isCompleted ? '✓' : i + 1}
+                  </div>
+                  <span className={[
+                    'text-sm font-medium capitalize',
+                    isActive ? 'text-gray-900' : isCompleted ? 'text-emerald-600' : 'text-gray-400',
+                  ].join(' ')} aria-current={isActive ? 'step' : undefined}>
+                    {s}
+                  </span>
+                </div>
+                {i < 1 && (
+                  <div className={[
+                    'flex-1 h-0.5 mx-4',
+                    isCompleted ? 'bg-emerald-600' : 'bg-gray-200',
+                  ].join(' ')} aria-hidden="true" />
+                )}
+              </li>
+            )
+          })}
         </ol>
       </nav>
 
