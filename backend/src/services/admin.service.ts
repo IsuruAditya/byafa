@@ -10,8 +10,51 @@ import type { OrderStatus } from '../models/Order.model'
 
 // ── Product CRUD ────────────────────────────────────────────────────────────
 
-export interface ProductInput {
-  name: string
+export interface AdminProductQuery {
+  search?: string
+  category?: string
+  page?: number
+  pageSize?: number
+}
+
+export async function getAdminProducts(query: AdminProductQuery) {
+  const { search, category, page = 1, pageSize = 20 } = query
+
+  const filter: Record<string, unknown> = {}
+
+  if (search?.trim()) {
+    filter.$text = { $search: search.trim() }
+  }
+
+  if (category?.trim()) {
+    filter.category = category.trim().toLowerCase()
+  }
+
+  const safePage     = Math.max(1, page)
+  const safePageSize = Math.min(Math.max(1, pageSize), 100)
+  const skip         = (safePage - 1) * safePageSize
+
+  const [data, total] = await Promise.all([
+    Product.find(filter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(safePageSize)
+      .lean(),
+    Product.countDocuments(filter),
+  ])
+
+  return {
+    data,
+    pagination: {
+      page: safePage,
+      pageSize: safePageSize,
+      total,
+      totalPages: Math.ceil(total / safePageSize),
+    },
+  }
+}
+
+export interface ProductInput {  name: string
   description: string
   price: number
   category: string

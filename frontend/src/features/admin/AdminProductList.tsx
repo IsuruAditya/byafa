@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { getProductsApi } from '../../api/productsApi'
-import { adminDeleteProductApi } from '../../api/adminApi'
+import { adminGetProductsApi, adminDeleteProductApi } from '../../api/adminApi'
 import type { Product } from '../../types/product.types'
 import { formatCurrency } from '../../utils/formatCurrency'
 import { Button } from '../../components/ui/Button'
@@ -20,7 +19,7 @@ export default function AdminProductList() {
   const fetchProducts = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await getProductsApi({ pageSize: 100 })
+      const res = await adminGetProductsApi({ pageSize: 100 })
       setProducts(res.data)
     } finally {
       setLoading(false)

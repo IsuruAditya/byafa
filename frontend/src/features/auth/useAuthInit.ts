@@ -1,13 +1,23 @@
 import { useEffect, useState } from 'react'
 import { useAppDispatch } from '../../store/hooks'
-import { setCredentials } from '../../store/slices/authSlice'
+import { setCredentials, updateAccessToken } from '../../store/slices/authSlice'
 import { getMeApi } from '../../api/authApi'
+import axiosInstance from '../../api/axiosInstance'
 import { store } from '../../store'
 import axios from 'axios'
 
 /**
- * Runs once on app mount. Calls GET /auth/me to rehydrate auth state.
- * Also merges any guest cart items into the authenticated session on login.
+ * Runs once on app mount to rehydrate auth state from the server.
+ *
+ * Flow:
+ * 1. Call GET /auth/me with the current access token (empty on hard refresh)
+ * 2. If 401, the Axios interceptor automatically calls POST /auth/refresh
+ *    using the httpOnly refresh token cookie, gets a new access token,
+ *    updates Redux, and retries the /me request
+ * 3. If refresh also fails (no valid session), user stays logged out
+ *
+ * This prevents the ProtectedRoute from flashing the login page for
+ * authenticated users on hard refresh.
  */
 export function useAuthInit() {
   const dispatch = useAppDispatch()
@@ -18,22 +28,40 @@ export function useAuthInit() {
 
     async function init() {
       try {
+        // Attempt to get a fresh access token via the refresh cookie first.
+        // This ensures we always have a valid token even after a hard refresh
+        // where the Redux store is empty.
+        const currentToken = store.getState().auth.accessToken
+        if (!currentToken) {
+          try {
+            const { data } = await axiosInstance.post<{
+              success: boolean
+              data: { accessToken: string }
+            }>('/auth/refresh')
+            if (data.success && data.data.accessToken) {
+              dispatch(updateAccessToken(data.data.accessToken))
+            }
+          } catch {
+            // No valid refresh token — user is not authenticated
+            return
+          }
+        }
+
         const res = await getMeApi()
         if (!cancelled && res.success && res.data) {
-          const currentToken = store.getState().auth.accessToken ?? ''
+          const latestToken = store.getState().auth.accessToken ?? ''
           dispatch(
             setCredentials({
               user: res.data.user,
-              accessToken: currentToken,
+              accessToken: latestToken,
             })
           )
-          // Guest cart is already in Redux/localStorage — no merge needed.
-          // The cart persists across login automatically via localStorage rehydration.
         }
       } catch (err) {
         if (!axios.isAxiosError(err) || err.response?.status !== 401) {
           console.error('Auth init error:', err)
         }
+        // 401 means no valid session — user stays logged out, which is correct
       } finally {
         if (!cancelled) setIsInitializing(false)
       }
@@ -43,7 +71,7 @@ export function useAuthInit() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [dispatch])
 
   return { isInitializing }
 }

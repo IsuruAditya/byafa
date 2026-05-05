@@ -4,6 +4,20 @@ import type { OrderStatus } from '../../models/Order.model'
 
 // ── Products ────────────────────────────────────────────────────────────────
 
+export async function getAdminProducts(req: Request, res: Response): Promise<void> {
+  const { search, category, page, pageSize } =
+    req.query as Record<string, string | undefined>
+
+  const result = await adminService.getAdminProducts({
+    search,
+    category,
+    page:     page     ? parseInt(page, 10)     : undefined,
+    pageSize: pageSize ? parseInt(pageSize, 10) : undefined,
+  })
+
+  res.status(200).json({ success: true, ...result })
+}
+
 export async function createProduct(req: Request, res: Response): Promise<void> {
   const files = (req.files as Express.Multer.File[]) ?? []
   const existingImages = req.body['existingImages']

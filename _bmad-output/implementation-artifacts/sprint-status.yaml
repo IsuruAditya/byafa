@@ -1,5 +1,5 @@
 # generated: 2026-05-03
-# last_updated: 2026-05-03
+# last_updated: 2026-05-05
 # project: simple-ecommerce
 # project_key: NOKEY
 # tracking_system: file-system
@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: "2026-05-03"
-last_updated: "2026-05-03"
+last_updated: "2026-05-05"
 project: simple-ecommerce
 project_key: NOKEY
 tracking_system: file-system
@@ -43,7 +43,7 @@ story_location: _bmad-output/implementation-artifacts
 
 development_status:
   # ─── Epic 1: Project Foundation & Infrastructure ───────────────────────────
-  epic-1: in-progress
+  epic-1: done
   1-1-initialize-monorepo-and-frontend-scaffold: done
   1-2-initialize-backend-scaffold-with-express-and-typescript: done
   1-3-configure-mongodb-atlas-connection-with-serverless-caching: done
@@ -53,7 +53,7 @@ development_status:
   epic-1-retrospective: optional
 
   # ─── Epic 2: User Authentication & Account Management ──────────────────────
-  epic-2: in-progress
+  epic-2: done
   2-1-user-registration: done
   2-2-user-login-and-logout: done
   2-3-jwt-refresh-token-flow: done
@@ -63,7 +63,7 @@ development_status:
   epic-2-retrospective: optional
 
   # ─── Epic 3: Product Catalog & Discovery ───────────────────────────────────
-  epic-3: in-progress
+  epic-3: done
   3-1-product-model-and-seed-data: done
   3-2-product-catalog-api: done
   3-3-product-catalog-page-frontend: done
@@ -71,14 +71,14 @@ development_status:
   epic-3-retrospective: optional
 
   # ─── Epic 4: Shopping Cart ──────────────────────────────────────────────────
-  epic-4: in-progress
+  epic-4: done
   4-1-cart-state-management-redux: done
   4-2-add-to-cart-update-quantity-remove-item: done
   4-3-cart-page: done
   epic-4-retrospective: optional
 
   # ─── Epic 5: Checkout & Payment ─────────────────────────────────────────────
-  epic-5: in-progress
+  epic-5: done
   5-1-order-and-stripe-models: done
   5-2-checkout-flow-shipping-and-payment-intent: done
   5-3-stripe-webhook-order-confirmation: done
@@ -86,7 +86,7 @@ development_status:
   epic-5-retrospective: optional
 
   # ─── Epic 6: Order Management (Customer) ────────────────────────────────────
-  epic-6: in-progress
+  epic-6: done
   6-1-order-history-and-detail-pages: done
   6-2-order-status-polling: done
   6-3-shipping-notification-email: done
@@ -116,3 +116,20 @@ development_status:
   9-3-image-optimization-and-performance: done
   9-4-accessibility-and-final-polish: done
   epic-9-retrospective: optional
+
+# ─── Post-MVP Improvements (2026-05-05) ──────────────────────────────────────
+# These items were identified during the implementation readiness review
+# and added as improvements beyond the original epic scope.
+post_mvp_improvements:
+  rate-limiting: done                    # express-rate-limit on all routes
+  admin-products-endpoint: done          # GET /api/v1/admin/products
+  auth-init-token-refresh: done          # Proper token refresh on hard reload
+  env-validation-warnings: done          # Warn on missing optional env vars
+  utility-functions: done                # formatDate, cn, useLocalStorage
+  admin-polling-hook: done               # useAdminPolling extracted hook
+  backend-types-index: done              # backend/src/types/index.ts
+  vercel-entry-point: done               # api/index.ts serverless entry
+  documentation: done                    # README, docs/, API reference
+  render-yaml-improvements: done         # Health check, cache headers
+  frontend-env-example: done             # frontend/.env.example
+

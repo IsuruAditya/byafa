@@ -2,6 +2,7 @@ import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
 import cookieParser from 'cookie-parser'
+import rateLimit from 'express-rate-limit'
 import { env } from './config/env'
 import { connectDB } from './config/db'
 import { errorMiddleware } from './api/middleware/error.middleware'
@@ -35,6 +36,28 @@ app.use(
     credentials: true,
   })
 )
+
+// ── Rate limiting ─────────────────────────────────────────────────────────────
+// Applied globally — stricter limits on auth routes to prevent brute force.
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 200,                  // 200 requests per window per IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many requests, please try again later.' },
+  skip: () => env.NODE_ENV === 'test',
+})
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20,                   // 20 auth attempts per window per IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many authentication attempts, please try again later.' },
+  skip: () => env.NODE_ENV === 'test',
+})
+
+app.use(globalLimiter)
 
 // ── Webhook routes — MUST be before express.json() ──────────────────────────
 // Stripe signature verification requires the raw request body.
@@ -102,7 +125,7 @@ ${productUrls}
 })
 
 // Feature routers
-app.use('/api/v1/auth', authRouter)
+app.use('/api/v1/auth', authLimiter, authRouter)
 app.use('/api/v1/admin', adminRouter)
 app.use('/api/v1/products', productRouter)
 app.use('/api/v1/orders', orderRouter)

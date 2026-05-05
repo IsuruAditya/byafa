@@ -31,6 +31,19 @@ router.get('/ping', (_req, res) => {
   res.json({ success: true, message: 'Admin access confirmed' })
 })
 
+// GET /api/v1/admin/products — list all products (admin view, no pagination limit)
+router.get(
+  '/products',
+  [
+    query('page').optional().isInt({ min: 1 }).toInt(),
+    query('pageSize').optional().isInt({ min: 1, max: 100 }).toInt(),
+    query('search').optional().isString().trim(),
+    query('category').optional().isString().trim(),
+  ],
+  validate,
+  adminController.getAdminProducts
+)
+
 // POST /api/v1/admin/products
 router.post(
   '/products',

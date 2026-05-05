@@ -5,6 +5,23 @@ import type { ApiResponse, PaginatedResponse } from '../types/api.types'
 
 // ── Products ─────────────────────────────────────────────────────────────────
 
+export interface AdminProductParams {
+  search?: string
+  category?: string
+  page?: number
+  pageSize?: number
+}
+
+export async function adminGetProductsApi(
+  params: AdminProductParams = {}
+): Promise<PaginatedResponse<Product>> {
+  const { data } = await axiosInstance.get<PaginatedResponse<Product>>(
+    '/admin/products',
+    { params }
+  )
+  return data
+}
+
 export async function adminCreateProductApi(
   formData: FormData
 ): Promise<ApiResponse<Product>> {

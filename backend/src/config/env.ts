@@ -11,6 +11,23 @@ for (const envVar of requiredEnvVars) {
   }
 }
 
+// Warn about optional but important env vars that affect functionality
+const optionalEnvVars: Array<{ key: string; feature: string }> = [
+  { key: 'STRIPE_SECRET_KEY',      feature: 'Stripe payments' },
+  { key: 'STRIPE_WEBHOOK_SECRET',  feature: 'Stripe webhook verification' },
+  { key: 'CLOUDINARY_CLOUD_NAME',  feature: 'Cloudinary image uploads' },
+  { key: 'CLOUDINARY_API_KEY',     feature: 'Cloudinary image uploads' },
+  { key: 'CLOUDINARY_API_SECRET',  feature: 'Cloudinary image uploads' },
+  { key: 'EMAIL_USER',             feature: 'Transactional emails' },
+  { key: 'EMAIL_PASS',             feature: 'Transactional emails' },
+]
+
+for (const { key, feature } of optionalEnvVars) {
+  if (!process.env[key]) {
+    console.warn(`⚠️  Missing optional env var: ${key} — ${feature} will be disabled`)
+  }
+}
+
 export const env = {
   NODE_ENV: process.env['NODE_ENV'] ?? 'development',
   PORT: parseInt(process.env['PORT'] ?? '5000', 10),
@@ -27,4 +44,8 @@ export const env = {
   CLOUDINARY_API_SECRET: process.env['CLOUDINARY_API_SECRET'] ?? '',
   EMAIL_USER: process.env['EMAIL_USER'] ?? '',
   EMAIL_PASS: process.env['EMAIL_PASS'] ?? '',
+  // Derived
+  IS_PRODUCTION: process.env['NODE_ENV'] === 'production',
+  IS_DEVELOPMENT: process.env['NODE_ENV'] === 'development',
+  IS_TEST: process.env['NODE_ENV'] === 'test',
 }

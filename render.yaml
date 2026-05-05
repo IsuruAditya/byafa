@@ -7,6 +7,7 @@ services:
     buildCommand: npm install && npm run build
     startCommand: npm start
     plan: free
+    healthCheckPath: /api/v1/health
     envVars:
       - key: NODE_ENV
         value: production
@@ -51,6 +52,16 @@ services:
       - type: rewrite
         source: /*
         destination: /index.html   # SPA client-side routing fallback
+    headers:
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable  # 1 year for hashed assets
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
     envVars:
       - key: VITE_API_URL
         sync: false                # Set to your backend Render URL + /api/v1
