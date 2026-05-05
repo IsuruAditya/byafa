@@ -114,7 +114,7 @@ export async function sendOrderConfirmationEmail(
      </p>
 
      <p style="margin:0 0 8px;font-size:13px;font-weight:600;color:#374151;text-transform:uppercase;letter-spacing:.05em;">
-       Order #${(order._id as string).toString().slice(-8).toUpperCase()}
+       Order #${String(order._id).slice(-8).toUpperCase()}
      </p>
 
      <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;margin-bottom:24px;">
@@ -154,7 +154,7 @@ export async function sendOrderConfirmationEmail(
   await transporter.sendMail({
     from: `"Byafa" <${env.EMAIL_USER}>`,
     to: toEmail,
-    subject: `Order confirmed — #${(order._id as string).toString().slice(-8).toUpperCase()}`,
+    subject: `Order confirmed — #${String(order._id).slice(-8).toUpperCase()}`,
     html,
   })
 }
@@ -175,11 +175,11 @@ export async function sendShippingNotificationEmail(
        Your order is on its way! 🚚
      </h1>
      <p style="margin:0 0 24px;color:#6b7280;font-size:14px;">
-       Hi ${toName}, your order #${(order._id as string).toString().slice(-8).toUpperCase()} has been shipped
+       Hi ${toName}, your order #${String(order._id).slice(-8).toUpperCase()} has been shipped
        and is on its way to you.
      </p>
 
-     <a href="${env.CLIENT_URL}/orders/${order._id as string}"
+     <a href="${env.CLIENT_URL}/orders/${String(order._id)}"
         style="display:inline-block;background:#4f46e5;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;">
        Track my order
      </a>`
@@ -188,7 +188,7 @@ export async function sendShippingNotificationEmail(
   await transporter.sendMail({
     from: `"Byafa" <${env.EMAIL_USER}>`,
     to: toEmail,
-    subject: `Your order has shipped — #${(order._id as string).toString().slice(-8).toUpperCase()}`,
+    subject: `Your order has shipped — #${String(order._id).slice(-8).toUpperCase()}`,
     html,
   })
 }

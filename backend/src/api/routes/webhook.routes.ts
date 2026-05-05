@@ -68,16 +68,15 @@ router.post(
             paymentIntent.metadata as Record<string, string>
           )
 
-          console.log(`✅ Order created: ${order._id as string} for PI ${paymentIntent.id}`)
+          console.log(`✅ Order created: ${String(order._id)} for PI ${paymentIntent.id}`)
 
           // Send confirmation email — fire-and-forget, don't block webhook response
           const userId = paymentIntent.metadata['userId']
           if (userId) {
             User.findById(userId)
               .then((user) => {
-                if (user) {
-                  return sendOrderConfirmationEmail(user.email, user.name, order)
-                }
+                if (!user) return
+                return sendOrderConfirmationEmail(user.email, user.name, order)
               })
               .catch((err) =>
                 console.error('❌ Failed to send confirmation email:', err)
