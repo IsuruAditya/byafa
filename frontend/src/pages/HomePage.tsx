@@ -4,7 +4,6 @@ import { Helmet } from 'react-helmet-async'
 import { getProductsApi } from '../api/productsApi'
 import type { Product } from '../types/product.types'
 import { ProductCard } from '../features/products/ProductCard'
-import { Spinner } from '../components/ui/Spinner'
 
 const CATEGORIES = [
   { label: 'Electronics', value: 'electronics', emoji: '💻' },
@@ -146,7 +145,19 @@ export default function HomePage() {
         </div>
 
         {loading ? (
-          <ProductGridSkeleton count={4} />
+          <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4" aria-label="Loading products" aria-busy="true">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <li key={i} className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden animate-pulse">
+                <div className="aspect-4/3 bg-gray-200" />
+                <div className="p-4 space-y-2">
+                  <div className="h-3 bg-gray-200 rounded w-1/3" />
+                  <div className="h-4 bg-gray-200 rounded w-3/4" />
+                  <div className="h-3 bg-gray-200 rounded w-1/2" />
+                  <div className="h-5 bg-gray-200 rounded w-1/4 mt-2" />
+                </div>
+              </li>
+            ))}
+          </ul>
         ) : featured.length === 0 ? (
           <div className="rounded-xl border border-gray-200 bg-white p-12 text-center">
             <p className="text-gray-500 text-sm">No products yet.</p>
