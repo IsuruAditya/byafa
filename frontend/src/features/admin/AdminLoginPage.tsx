@@ -6,7 +6,6 @@ import { useAppDispatch, useAppSelector } from '../../store/hooks'
 import { setCredentials } from '../../store/slices/authSlice'
 import { loginApi } from '../../api/authApi'
 import { Button } from '../../components/ui/Button'
-import { Input } from '../../components/ui/Input'
 import axios from 'axios'
 import { useEffect } from 'react'
 

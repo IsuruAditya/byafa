@@ -19,7 +19,7 @@ import { BackToTop } from '../ui/BackToTop'
  */
 export function MainLayout() {
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-950">
       <Navbar />
       <main
         id="main-content"

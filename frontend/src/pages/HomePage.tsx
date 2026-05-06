@@ -109,7 +109,7 @@ export default function HomePage() {
       <section id="categories" className="mb-14" aria-labelledby="categories-heading">
         <h2
           id="categories-heading"
-          className="text-xl font-bold text-gray-900 mb-5"
+          className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-5"
         >
           Shop by category
         </h2>
@@ -118,12 +118,12 @@ export default function HomePage() {
             <button
               key={cat.value}
               onClick={() => navigate(`/products?category=${cat.value}`)}
-              className="flex flex-col items-center gap-2 rounded-xl border border-gray-200 bg-white p-5 shadow-sm hover:shadow-md hover:border-emerald-300 transition-all group"
+              className="flex flex-col items-center gap-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm hover:shadow-md hover:border-emerald-300 dark:hover:border-emerald-600 transition-all group"
             >
               <span className="text-3xl" aria-hidden="true">
                 {cat.emoji}
               </span>
-              <span className="text-sm font-medium text-gray-700 group-hover:text-emerald-600 transition-colors">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                 {cat.label}
               </span>
             </button>
@@ -134,12 +134,12 @@ export default function HomePage() {
       {/* ── Featured products ─────────────────────────────────────────── */}
       <section aria-labelledby="featured-heading" className="mb-14">
         <div className="flex items-center justify-between mb-5">
-          <h2 id="featured-heading" className="text-xl font-bold text-gray-900">
+          <h2 id="featured-heading" className="text-xl font-bold text-gray-900 dark:text-gray-100">
             Featured products
           </h2>
           <Link
             to="/products"
-            className="text-sm font-medium text-emerald-600 hover:text-emerald-500 transition-colors"
+            className="text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 transition-colors"
           >
             View all →
           </Link>
@@ -148,11 +148,11 @@ export default function HomePage() {
         {loading ? (
           <ProductGridSkeleton count={4} />
         ) : featured.length === 0 ? (
-          <div className="rounded-xl border border-gray-200 bg-white p-12 text-center">
-            <p className="text-gray-500 text-sm">No products yet.</p>
+          <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-12 text-center">
+            <p className="text-gray-500 dark:text-gray-400 text-sm">No products yet.</p>
             <Link
               to="/products"
-              className="mt-3 inline-block text-sm font-medium text-emerald-600 hover:underline"
+              className="mt-3 inline-block text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:underline"
             >
               Browse catalog
             </Link>
@@ -173,28 +173,28 @@ export default function HomePage() {
 
       {/* ── Trust strip ───────────────────────────────────────────────── */}
       <section
-        className="-mx-4 sm:-mx-6 lg:-mx-8 bg-white border-t border-b border-gray-200 px-4 sm:px-6 lg:px-8 py-10 -mb-8"
+        className="-mx-4 sm:-mx-6 lg:-mx-8 bg-white dark:bg-gray-800 border-t border-b border-gray-200 dark:border-gray-700 px-4 sm:px-6 lg:px-8 py-10 -mb-8"
         aria-label="Why shop with us"
       >
         <div className="mx-auto max-w-7xl grid grid-cols-1 sm:grid-cols-3 gap-8 text-center">
           <div className="flex flex-col items-center gap-2">
             <span className="text-2xl" aria-hidden="true">🔒</span>
-            <p className="text-sm font-semibold text-gray-900">Secure checkout</p>
-            <p className="text-xs text-gray-500">
+            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">Secure checkout</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               Payments processed by Stripe — your card details are never stored.
             </p>
           </div>
           <div className="flex flex-col items-center gap-2">
             <span className="text-2xl" aria-hidden="true">📦</span>
-            <p className="text-sm font-semibold text-gray-900">Real-time tracking</p>
-            <p className="text-xs text-gray-500">
+            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">Real-time tracking</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               Track your order status live from your account dashboard.
             </p>
           </div>
           <div className="flex flex-col items-center gap-2">
             <span className="text-2xl" aria-hidden="true">⭐</span>
-            <p className="text-sm font-semibold text-gray-900">Verified reviews</p>
-            <p className="text-xs text-gray-500">
+            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">Verified reviews</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               Reviews only from customers who actually purchased the product.
             </p>
           </div>

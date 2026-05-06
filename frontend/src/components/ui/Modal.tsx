@@ -62,11 +62,11 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
         aria-modal="true"
         aria-labelledby="modal-title"
         tabIndex={-1}
-        className="relative z-10 w-full max-w-md rounded-xl bg-white shadow-xl p-6 space-y-4 focus:outline-none"
+        className="relative z-10 w-full max-w-md rounded-xl bg-white dark:bg-gray-800 shadow-xl dark:shadow-gray-900/50 p-6 space-y-4 focus:outline-none"
       >
         <h2
           id="modal-title"
-          className="text-lg font-semibold text-gray-900"
+          className="text-lg font-semibold text-gray-900 dark:text-gray-100"
         >
           {title}
         </h2>

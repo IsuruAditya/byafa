@@ -1,16 +1,70 @@
 @import "tailwindcss";
 
+/* ── Dark mode strategy ──────────────────────────────────────────────────────
+   Tailwind v4 uses the `dark` variant via the `.dark` class on <html>.
+   We declare CSS custom properties here so non-Tailwind elements (e.g. Stripe
+   Elements, third-party widgets) can also respond to the theme.
+   ──────────────────────────────────────────────────────────────────────── */
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  color-scheme: light;
+}
+
+.dark {
+  color-scheme: dark;
+}
+
+/* ── Smooth theme transition ─────────────────────────────────────────────────
+   Apply a short transition to color-bearing properties so the light↔dark
+   switch feels polished rather than jarring. Exclude transitions on elements
+   where instant feedback matters (inputs, buttons with :active states).
+   ──────────────────────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-duration: 150ms;
+  transition-timing-function: ease;
+}
+
+/* Disable transition on page load to prevent flash */
+.no-transitions *,
+.no-transitions *::before,
+.no-transitions *::after {
+  transition: none !important;
+}
+
 /* ── Global focus ring ───────────────────────────────────────────────────────
-   Tailwind's focus-visible utilities handle most cases, but this ensures
-   a consistent visible ring for any element that receives keyboard focus
-   and doesn't already have one defined.
+   Consistent visible ring for keyboard navigation.
    ──────────────────────────────────────────────────────────────────────── */
 :focus-visible {
   outline: 2px solid #059669;
   outline-offset: 2px;
 }
 
-/* Remove default outline only when focus-visible is supported */
 :focus:not(:focus-visible) {
   outline: none;
+}
+
+/* ── Scrollbar ───────────────────────────────────────────────────────────────
+   Subtle scrollbar that respects the current theme.
+   ──────────────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgb(156 163 175 / 0.5);
+  border-radius: 9999px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background-color: rgb(75 85 99 / 0.7);
 }

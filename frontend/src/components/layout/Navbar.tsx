@@ -4,6 +4,7 @@ import { useAppDispatch, useAppSelector } from '../../store/hooks'
 import { logout } from '../../store/slices/authSlice'
 import { clearCart } from '../../store/slices/cartSlice'
 import { logoutApi } from '../../api/authApi'
+import { ThemeToggle } from '../ui/ThemeToggle'
 
 // ── Icons ────────────────────────────────────────────────────────────────────
 
@@ -131,17 +132,16 @@ export function Navbar() {
       </div>
 
       {/* ── Sticky header ────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-40 bg-white shadow-sm">
+      <header className="sticky top-0 z-40 bg-white dark:bg-gray-900 shadow-sm dark:shadow-gray-900/50">
 
         {/* ── Row 1: Logo | Search (centered) | Actions ─────────────── */}
-        {/* 3-column grid: logo | search | actions — true centering */}
-        <div className="border-b border-gray-200">
+        <div className="border-b border-gray-200 dark:border-gray-700">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-[auto_1fr_auto] items-center h-16 gap-4">
 
               {/* Col 1: Logo — left */}
               <Link to="/" className="shrink-0 flex items-center">
-                <img src="/logo.png" alt="Byafa" className="h-11 w-auto" />
+                <img src="/logo.png" alt="Byafa" className="h-11 w-auto dark:brightness-0 dark:invert" />
               </Link>
 
               {/* Col 2: Search — truly centered */}
@@ -150,13 +150,13 @@ export function Navbar() {
                 className="hidden md:flex w-full max-w-2xl mx-auto"
                 role="search"
               >
-                <div className="flex w-full rounded-full border-2 border-gray-200 overflow-hidden hover:border-emerald-400 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all bg-gray-50">
+                <div className="flex w-full rounded-full border-2 border-gray-200 dark:border-gray-700 overflow-hidden hover:border-emerald-400 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all bg-gray-50 dark:bg-gray-800">
                   <input
                     type="search"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search for products, brands and more…"
-                    className="flex-1 px-5 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 bg-transparent focus:outline-none"
+                    className="flex-1 px-5 py-2.5 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 bg-transparent focus:outline-none"
                     aria-label="Search products"
                   />
                   <button
@@ -176,7 +176,7 @@ export function Navbar() {
                 {/* Cart */}
                 <Link
                   to="/cart"
-                  className="relative flex h-10 w-10 items-center justify-center rounded-full text-gray-600 hover:bg-gray-100 hover:text-emerald-600 transition-colors"
+                  className="relative flex h-10 w-10 items-center justify-center rounded-full text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
                   aria-label={`Cart${cartCount > 0 ? `, ${cartCount} item${cartCount !== 1 ? 's' : ''}` : ''}`}
                 >
                   <CartIcon />
@@ -197,7 +197,7 @@ export function Navbar() {
                     <>
                       <button
                         onClick={() => setAccountOpen((o) => !o)}
-                        className="flex h-10 items-center gap-1.5 rounded-full px-3 text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+                        className="flex h-10 items-center gap-1.5 rounded-full px-3 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                         aria-expanded={accountOpen}
                         aria-haspopup="true"
                       >
@@ -207,29 +207,29 @@ export function Navbar() {
                       </button>
 
                       {accountOpen && (
-                        <div className="absolute right-0 mt-2 w-56 rounded-xl border border-gray-200 bg-white shadow-xl py-1 z-50">
-                          <div className="px-4 py-3 border-b border-gray-100">
-                            <p className="text-sm font-semibold text-gray-900 truncate">{user?.name}</p>
-                            <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+                        <div className="absolute right-0 mt-2 w-56 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-xl dark:shadow-gray-900/50 py-1 z-50">
+                          <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+                            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{user?.name}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
                             {user?.role === 'admin' && (
-                              <span className="inline-block mt-1 text-[10px] font-semibold uppercase tracking-wide text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                              <span className="inline-block mt-1 text-[10px] font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full">
                                 Admin
                               </span>
                             )}
                           </div>
-                          <Link to="/orders" onClick={() => setAccountOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                          <Link to="/orders" onClick={() => setAccountOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                             <span>📦</span> My orders
                           </Link>
-                          <Link to="/profile" onClick={() => setAccountOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                          <Link to="/profile" onClick={() => setAccountOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                             <span>👤</span> Profile
                           </Link>
                           {user?.role === 'admin' && (
-                            <Link to="/admin" onClick={() => setAccountOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-emerald-600 font-medium hover:bg-emerald-50 transition-colors">
+                            <Link to="/admin" onClick={() => setAccountOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-emerald-600 dark:text-emerald-400 font-medium hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors">
                               <span>⚙️</span> Admin dashboard
                             </Link>
                           )}
-                          <div className="border-t border-gray-100 mt-1 pt-1">
-                            <button onClick={handleLogout} className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                          <div className="border-t border-gray-100 dark:border-gray-700 mt-1 pt-1">
+                            <button onClick={handleLogout} className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
                               <span>🚪</span> Sign out
                             </button>
                           </div>
@@ -238,7 +238,7 @@ export function Navbar() {
                     </>
                   ) : (
                     <div className="flex items-center gap-2">
-                      <Link to="/login" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors px-3 py-2 whitespace-nowrap">
+                      <Link to="/login" className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors px-3 py-2 whitespace-nowrap">
                         Sign in
                       </Link>
                       <Link to="/register" className="inline-flex items-center justify-center rounded-full bg-emerald-600 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors whitespace-nowrap">
@@ -257,21 +257,26 @@ export function Navbar() {
                 >
                   <MenuIcon />
                 </button>
+
+                {/* Theme toggle — desktop */}
+                <div className="hidden md:flex">
+                  <ThemeToggle />
+                </div>
               </div>
             </div>
           </div>
         </div>
 
         {/* ── Row 1.5: Mobile search bar ─────────────────────────────── */}
-        <div className="md:hidden border-b border-gray-100 px-4 py-2 bg-white">
+        <div className="md:hidden border-b border-gray-100 dark:border-gray-700 px-4 py-2 bg-white dark:bg-gray-900">
           <form onSubmit={handleSearch} role="search">
-            <div className="flex rounded-full border-2 border-gray-200 overflow-hidden focus-within:border-emerald-500 bg-gray-50">
+            <div className="flex rounded-full border-2 border-gray-200 dark:border-gray-700 overflow-hidden focus-within:border-emerald-500 bg-gray-50 dark:bg-gray-800">
               <input
                 type="search"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search products…"
-                className="flex-1 px-4 py-2 text-sm text-gray-900 placeholder:text-gray-400 bg-transparent focus:outline-none"
+                className="flex-1 px-4 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 bg-transparent focus:outline-none"
                 aria-label="Search products"
               />
               <button type="submit" className="px-4 bg-emerald-600 text-white flex items-center justify-center" aria-label="Search">
@@ -283,7 +288,7 @@ export function Navbar() {
 
         {/* ── Row 2: Category nav — desktop only ───────────────────── */}
         <nav
-          className="hidden md:block border-b border-gray-100 bg-white"
+          className="hidden md:block border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-900"
           aria-label="Category navigation"
         >
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -296,8 +301,8 @@ export function Navbar() {
                     [
                       'px-4 h-full flex items-center text-sm font-medium transition-colors whitespace-nowrap border-b-2 -mb-px',
                       isActive
-                        ? 'text-emerald-600 border-emerald-600'
-                        : 'text-gray-600 border-transparent hover:text-gray-900 hover:border-gray-300',
+                        ? 'text-emerald-600 dark:text-emerald-400 border-emerald-600 dark:border-emerald-400'
+                        : 'text-gray-600 dark:text-gray-400 border-transparent hover:text-gray-900 dark:hover:text-gray-100 hover:border-gray-300 dark:hover:border-gray-600',
                     ].join(' ')
                   }
                 >
@@ -319,19 +324,19 @@ export function Navbar() {
         aria-modal="true"
         aria-label="Navigation menu"
         className={[
-          'fixed inset-y-0 left-0 z-50 w-80 bg-white shadow-2xl flex flex-col md:hidden',
+          'fixed inset-y-0 left-0 z-50 w-80 bg-white dark:bg-gray-900 shadow-2xl flex flex-col md:hidden',
           'transition-transform duration-300 ease-in-out',
           drawerOpen ? 'translate-x-0' : '-translate-x-full',
         ].join(' ')}
       >
         {/* Drawer header */}
-        <div className="flex h-16 items-center justify-between px-5 border-b border-gray-200 shrink-0">
+        <div className="flex h-16 items-center justify-between px-5 border-b border-gray-200 dark:border-gray-700 shrink-0">
           <Link to="/" onClick={closeDrawer} className="shrink-0">
-            <img src="/logo.png" alt="Byafa" className="h-11 w-auto" />
+            <img src="/logo.png" alt="Byafa" className="h-11 w-auto dark:brightness-0 dark:invert" />
           </Link>
           <button
             onClick={closeDrawer}
-            className="flex h-9 w-9 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 transition-colors"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             aria-label="Close menu"
           >
             <CloseIcon />
@@ -339,15 +344,15 @@ export function Navbar() {
         </div>
 
         {/* Mobile search */}
-        <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
+        <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
           <form onSubmit={handleSearch} role="search">
-            <div className="flex rounded-full border-2 border-gray-200 overflow-hidden focus-within:border-emerald-500 bg-white">
+            <div className="flex rounded-full border-2 border-gray-200 dark:border-gray-700 overflow-hidden focus-within:border-emerald-500 bg-white dark:bg-gray-800">
               <input
                 type="search"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search products…"
-                className="flex-1 px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 bg-transparent focus:outline-none"
+                className="flex-1 px-4 py-2.5 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 bg-transparent focus:outline-none"
                 aria-label="Search products"
               />
               <button type="submit" className="px-4 bg-emerald-600 text-white flex items-center justify-center" aria-label="Search">
@@ -360,13 +365,13 @@ export function Navbar() {
         {/* Drawer nav */}
         <nav className="flex-1 overflow-y-auto" aria-label="Mobile navigation">
           <div className="px-4 pt-4 pb-2">
-            <p className="px-3 pb-2 text-xs font-semibold uppercase tracking-widest text-gray-400">Shop</p>
+            <p className="px-3 pb-2 text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Shop</p>
             {CATEGORIES.map(({ to, label }) => (
               <Link
                 key={to}
                 to={to}
                 onClick={closeDrawer}
-                className="flex items-center rounded-lg px-3 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-emerald-600 transition-colors"
+                className="flex items-center rounded-lg px-3 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
               >
                 {label}
               </Link>
@@ -374,16 +379,16 @@ export function Navbar() {
           </div>
 
           {isAuthenticated && (
-            <div className="px-4 pt-2 pb-4 border-t border-gray-100">
-              <p className="px-3 pt-3 pb-2 text-xs font-semibold uppercase tracking-widest text-gray-400">Account</p>
-              <Link to="/orders" onClick={closeDrawer} className="flex items-center gap-2.5 rounded-lg px-3 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-emerald-600 transition-colors">
+            <div className="px-4 pt-2 pb-4 border-t border-gray-100 dark:border-gray-700">
+              <p className="px-3 pt-3 pb-2 text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Account</p>
+              <Link to="/orders" onClick={closeDrawer} className="flex items-center gap-2.5 rounded-lg px-3 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
                 <span>📦</span> My orders
               </Link>
-              <Link to="/profile" onClick={closeDrawer} className="flex items-center gap-2.5 rounded-lg px-3 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-emerald-600 transition-colors">
+              <Link to="/profile" onClick={closeDrawer} className="flex items-center gap-2.5 rounded-lg px-3 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
                 <span>👤</span> Profile
               </Link>
               {user?.role === 'admin' && (
-                <Link to="/admin" onClick={closeDrawer} className="flex items-center gap-2.5 rounded-lg px-3 py-3 text-sm font-medium text-emerald-600 hover:bg-emerald-50 transition-colors">
+                <Link to="/admin" onClick={closeDrawer} className="flex items-center gap-2.5 rounded-lg px-3 py-3 text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors">
                   <span>⚙️</span> Admin dashboard
                 </Link>
               )}
@@ -392,23 +397,26 @@ export function Navbar() {
         </nav>
 
         {/* Drawer footer */}
-        <div className="shrink-0 border-t border-gray-200 px-4 py-4 space-y-2">
+        <div className="shrink-0 border-t border-gray-200 dark:border-gray-700 px-4 py-4 space-y-2">
+          {/* Theme toggle — mobile */}
+          <ThemeToggle showLabel />
+
           {isAuthenticated ? (
             <>
-              <div className="px-3 py-2.5 bg-gray-50 rounded-xl">
-                <p className="text-sm font-semibold text-gray-900 truncate">{user?.name}</p>
-                <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+              <div className="px-3 py-2.5 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{user?.name}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
               </div>
               <button
                 onClick={handleLogout}
-                className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-200 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-200 dark:border-red-800 px-4 py-2.5 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
               >
                 Sign out
               </button>
             </>
           ) : (
             <>
-              <Link to="/login" onClick={closeDrawer} className="flex w-full items-center justify-center rounded-xl border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+              <Link to="/login" onClick={closeDrawer} className="flex w-full items-center justify-center rounded-xl border border-gray-300 dark:border-gray-600 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                 Sign in
               </Link>
               <Link to="/register" onClick={closeDrawer} className="flex w-full items-center justify-center rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors">

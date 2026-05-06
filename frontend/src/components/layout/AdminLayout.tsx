@@ -4,6 +4,7 @@ import { useAppDispatch, useAppSelector } from '../../store/hooks'
 import { logout } from '../../store/slices/authSlice'
 import { clearCart } from '../../store/slices/cartSlice'
 import { logoutApi } from '../../api/authApi'
+import { ThemeToggle } from '../ui/ThemeToggle'
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
 
@@ -96,7 +97,7 @@ export function AdminLayout() {
   }
 
   return (
-    <div className="min-h-screen flex bg-gray-100">
+    <div className="min-h-screen flex bg-gray-100 dark:bg-gray-950">
 
       {/* ── Mobile overlay ──────────────────────────────────────────── */}
       {sidebarOpen && (
@@ -182,17 +183,18 @@ export function AdminLayout() {
       <div className="flex-1 flex flex-col min-w-0">
 
         {/* Topbar */}
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 lg:px-6 shrink-0">
+        <header className="h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-4 lg:px-6 shrink-0">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="lg:hidden flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50"
+            className="lg:hidden flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700"
             aria-label="Open menu"
           >
             <MenuIcon />
           </button>
           <div className="hidden lg:block" />
           <div className="flex items-center gap-3">
-            <span className="text-xs font-medium text-gray-500 hidden sm:block">
+            <ThemeToggle />
+            <span className="text-xs font-medium text-gray-500 dark:text-gray-400 hidden sm:block">
               {user?.name}
             </span>
             <div className="h-8 w-8 rounded-full bg-emerald-600 flex items-center justify-center text-white text-xs font-bold">

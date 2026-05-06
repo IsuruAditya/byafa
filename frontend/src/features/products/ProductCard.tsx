@@ -49,11 +49,11 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
   return (
     <Link
       to={`/products/${product._id}`}
-      className="group flex flex-col rounded-xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden"
+      className="group flex flex-col rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm hover:shadow-md dark:hover:shadow-gray-900/40 transition-all duration-200 overflow-hidden"
       aria-label={`View ${product.name}`}
     >
       {/* Image */}
-      <div className="relative aspect-4/3 overflow-hidden bg-gray-100">
+      <div className="relative aspect-4/3 overflow-hidden bg-gray-100 dark:bg-gray-700">
         <img
           src={image}
           alt={product.name}
@@ -84,7 +84,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
               'w-full py-2.5 text-sm font-semibold transition-colors',
               canAdd
                 ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                : 'bg-gray-200 text-gray-400 cursor-not-allowed',
+                : 'bg-gray-200 dark:bg-gray-600 text-gray-400 dark:text-gray-500 cursor-not-allowed',
             ].join(' ')}
           >
             {adding ? '✓ Added!' : !inStock ? 'Out of stock' : cartQuantity > 0 ? `Add more (${cartQuantity} in cart)` : 'Add to cart'}
@@ -94,10 +94,10 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
 
       {/* Info */}
       <div className="flex flex-1 flex-col gap-1.5 p-4">
-        <p className="text-xs font-medium uppercase tracking-wide text-emerald-500">
+        <p className="text-xs font-medium uppercase tracking-wide text-emerald-500 dark:text-emerald-400">
           {product.category}
         </p>
-        <h3 className="text-sm font-semibold text-gray-900 line-clamp-2 leading-snug group-hover:text-emerald-600 transition-colors">
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 line-clamp-2 leading-snug group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
           {product.name}
         </h3>
         <StarRating
@@ -105,7 +105,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
           count={product.ratings.count}
         />
         <div className="mt-auto pt-2 flex items-center justify-between gap-2">
-          <p className="text-base font-bold text-gray-900">
+          <p className="text-base font-bold text-gray-900 dark:text-gray-100">
             {formatCurrency(product.price)}
           </p>
           {/* Mobile Add to Cart — always visible below price */}
@@ -117,7 +117,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
               'md:hidden shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors',
               canAdd
                 ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                : 'bg-gray-100 text-gray-400 cursor-not-allowed',
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-400 cursor-not-allowed',
             ].join(' ')}
           >
             {adding ? '✓' : !inStock ? 'Sold out' : '+ Cart'}
