@@ -6,8 +6,14 @@ const requiredEnvVars = ['MONGO_URI', 'JWT_SECRET', 'JWT_REFRESH_SECRET'] as con
 
 for (const envVar of requiredEnvVars) {
   if (!process.env[envVar]) {
-    console.error(`❌ Missing required environment variable: ${envVar}`)
-    process.exit(1)
+    // In test mode, mongodb-memory-server provides the URI at runtime —
+    // don't exit, just warn. In production/development, exit immediately.
+    if (process.env['NODE_ENV'] === 'test') {
+      console.warn(`⚠️  Test env: ${envVar} not set — will be provided at runtime`)
+    } else {
+      console.error(`❌ Missing required environment variable: ${envVar}`)
+      process.exit(1)
+    }
   }
 }
 

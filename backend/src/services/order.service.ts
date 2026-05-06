@@ -141,7 +141,7 @@ export async function createOrderFromWebhook(
             stockQuantity: { $gte: item.quantity }, // guard against oversell
           },
           { $inc: { stockQuantity: -item.quantity } },
-          { session, new: true }
+          { session, returnDocument: 'after' }
         )
 
         if (!result) {
@@ -216,7 +216,7 @@ export async function updateOrderStatus(
   const order = await Order.findByIdAndUpdate(
     orderId,
     { status },
-    { new: true }
+    { returnDocument: 'after' }
   )
 
   if (!order) throw new AppError('Order not found', 404)

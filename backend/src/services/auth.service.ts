@@ -137,7 +137,7 @@ export async function updateProfile(
   const user = await User.findByIdAndUpdate(
     userId,
     { ...(name && { name }), ...(email && { email }) },
-    { new: true, runValidators: true }
+    { returnDocument: 'after', runValidators: true }
   )
 
   if (!user) {

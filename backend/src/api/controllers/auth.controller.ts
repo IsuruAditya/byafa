@@ -57,7 +57,7 @@ export async function refresh(req: Request, res: Response): Promise<void> {
   // Accept refresh token from cookie (web) OR request body (mobile)
   const rawToken =
     (req.cookies[REFRESH_COOKIE] as string | undefined) ??
-    (req.body as { refreshToken?: string }).refreshToken
+    (req.body as { refreshToken?: string } | undefined)?.refreshToken
 
   if (!rawToken) {
     res.status(401).json({ success: false, message: 'No refresh token provided' })
@@ -76,7 +76,7 @@ export async function logout(req: Request, res: Response): Promise<void> {
   // Accept refresh token from cookie (web) OR request body (mobile)
   const rawToken =
     (req.cookies[REFRESH_COOKIE] as string | undefined) ??
-    (req.body as { refreshToken?: string }).refreshToken
+    (req.body as { refreshToken?: string } | undefined)?.refreshToken
 
   if (rawToken) {
     await authService.logoutUser(rawToken)
