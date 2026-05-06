@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: "2026-05-03"
-last_updated: "2026-05-05"
+last_updated: "2026-05-06"
 project: simple-ecommerce
 project_key: NOKEY
 tracking_system: file-system
@@ -117,19 +117,39 @@ development_status:
   9-4-accessibility-and-final-polish: done
   epic-9-retrospective: optional
 
+  # ─── Epic 10: Mobile App (React Native + Expo) ───────────────────────────────
+  # Added 2026-05-06: Mobile was implemented outside BMAD tracking.
+  # Story files created retroactively to complete the BMAD record.
+  epic-10: done
+  10-1-mobile-scaffold-navigation-and-auth: done
+  10-2-mobile-product-catalog-and-detail: done
+  10-3-mobile-cart-and-checkout: done
+  10-4-mobile-order-history-and-tracking: done
+  10-5-mobile-profile-and-account-management: done
+  epic-10-retrospective: optional
+
+  # ─── Epic 11: Test Coverage (TEA Module) ─────────────────────────────────────
+  # Added 2026-05-06: TEA module installed but test-artifacts/ is empty.
+  epic-11: backlog
+  11-1-test-framework-setup: backlog
+  11-2-backend-unit-tests-auth-and-order-services: backlog
+  11-3-backend-integration-tests-api-endpoints: backlog
+  11-4-frontend-component-tests: backlog
+  11-5-e2e-tests-critical-purchase-flow: backlog
+  epic-11-retrospective: optional
+
 # ─── Post-MVP Improvements (2026-05-05) ──────────────────────────────────────
-# These items were identified during the implementation readiness review
-# and added as improvements beyond the original epic scope.
 post_mvp_improvements:
-  rate-limiting: done                    # express-rate-limit on all routes
-  admin-products-endpoint: done          # GET /api/v1/admin/products
-  auth-init-token-refresh: done          # Proper token refresh on hard reload
-  env-validation-warnings: done          # Warn on missing optional env vars
-  utility-functions: done                # formatDate, cn, useLocalStorage
-  admin-polling-hook: done               # useAdminPolling extracted hook
-  backend-types-index: done              # backend/src/types/index.ts
-  vercel-entry-point: done               # api/index.ts serverless entry
-  documentation: done                    # README, docs/, API reference
-  render-yaml-improvements: done         # Health check, cache headers
-  frontend-env-example: done             # frontend/.env.example
+  rate-limiting: done
+  admin-products-endpoint: done
+  auth-init-token-refresh: done
+  env-validation-warnings: done
+  utility-functions: done
+  admin-polling-hook: done
+  backend-types-index: done
+  vercel-entry-point: done
+  documentation: done
+  render-yaml-improvements: done
+  frontend-env-example: done
+  project-context-generated: done
 
