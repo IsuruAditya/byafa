@@ -1,0 +1,53 @@
+{
+  "expo": {
+    "name": "Byafa",
+    "slug": "byafa",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#059669"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.byafa.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Used for product image uploads",
+        "NSPhotoLibraryUsageDescription": "Used for product image uploads"
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#059669"
+      },
+      "package": "com.byafa.app",
+      "permissions": []
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-secure-store"
+      ],
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "merchant.com.byafa.app",
+          "enableGooglePay": true
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "4f149260-efd0-4afa-92a6-dcb88ca00bfa"
+      }
+    },
+    "owner": "adithyasandaru"
+  }
+}
