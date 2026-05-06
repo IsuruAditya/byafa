@@ -28,6 +28,8 @@ export async function register(req: Request, res: Response): Promise<void> {
     data: {
       user: result.user,
       accessToken: result.accessToken,
+      // Also returned in body so mobile clients can store it in SecureStore
+      refreshToken: result.refreshToken,
     },
   })
 }
@@ -45,12 +47,18 @@ export async function login(req: Request, res: Response): Promise<void> {
     data: {
       user: result.user,
       accessToken: result.accessToken,
+      // Also returned in body so mobile clients can store it in SecureStore
+      refreshToken: result.refreshToken,
     },
   })
 }
 
 export async function refresh(req: Request, res: Response): Promise<void> {
-  const rawToken = req.cookies[REFRESH_COOKIE] as string | undefined
+  // Accept refresh token from cookie (web) OR request body (mobile)
+  const rawToken =
+    (req.cookies[REFRESH_COOKIE] as string | undefined) ??
+    (req.body as { refreshToken?: string }).refreshToken
+
   if (!rawToken) {
     res.status(401).json({ success: false, message: 'No refresh token provided' })
     return
@@ -65,7 +73,11 @@ export async function refresh(req: Request, res: Response): Promise<void> {
 }
 
 export async function logout(req: Request, res: Response): Promise<void> {
-  const rawToken = req.cookies[REFRESH_COOKIE] as string | undefined
+  // Accept refresh token from cookie (web) OR request body (mobile)
+  const rawToken =
+    (req.cookies[REFRESH_COOKIE] as string | undefined) ??
+    (req.body as { refreshToken?: string }).refreshToken
+
   if (rawToken) {
     await authService.logoutUser(rawToken)
   }
