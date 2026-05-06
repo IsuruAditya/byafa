@@ -50,6 +50,11 @@ axiosInstance.interceptors.response.use(
       return Promise.reject(error)
     }
 
+    // Never retry the refresh endpoint itself — that would cause an infinite loop
+    if (originalRequest.url?.includes('/auth/refresh')) {
+      return Promise.reject(error)
+    }
+
     if (isRefreshing) {
       // Queue this request until the refresh completes
       return new Promise((resolve, reject) => {

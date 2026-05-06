@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import {
   adminGetDashboardApi,
   adminGetRevenueSummaryApi,
+  adminGetInventoryApi,
   type DashboardStats,
   type RevenueSummary,
 } from '../../api/adminApi'
@@ -51,6 +52,7 @@ export default function AdminDashboard() {
   const [summary, setSummary] = useState<RevenueSummary | null>(null)
   const [period, setPeriod] = useState<Period>('today')
   const [loading, setLoading] = useState(true)
+  const [lowStockCount, setLowStockCount] = useState(0)
   const prevOrderCount = useRef<number | null>(null)
 
   const fetchDashboard = useCallback(async (isPolling = false) => {
@@ -85,11 +87,23 @@ export default function AdminDashboard() {
     }
   }, [])
 
+  const fetchLowStock = useCallback(async () => {
+    try {
+      const res = await adminGetInventoryApi()
+      if (res.success && res.data) {
+        setLowStockCount(res.data.summary.lowStock + res.data.summary.outOfStock)
+      }
+    } catch {
+      // Non-critical
+    }
+  }, [])
+
   // Initial load
   useEffect(() => {
     void fetchDashboard()
     void fetchSummary(period)
-  }, [fetchDashboard, fetchSummary, period])
+    void fetchLowStock()
+  }, [fetchDashboard, fetchSummary, fetchLowStock, period])
 
   // Polling every 30s
   useEffect(() => {
@@ -121,6 +135,26 @@ export default function AdminDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Low stock alert */}
+      {lowStockCount > 0 && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">⚠️</span>
+            <div>
+              <p className="text-sm font-semibold text-yellow-800">
+                {lowStockCount} product{lowStockCount !== 1 ? 's' : ''} need restocking
+              </p>
+              <p className="text-xs text-yellow-600">Low or out of stock items require attention</p>
+            </div>
+          </div>
+          <Link to="/admin/inventory">
+            <button className="px-4 py-2 bg-yellow-600 text-white text-sm font-medium rounded-lg hover:bg-yellow-700 transition-colors">
+              View inventory
+            </button>
+          </Link>
+        </div>
+      )}
 
       {/* Revenue summary */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 space-y-4">

@@ -5,7 +5,7 @@ export function AdminRoute() {
   const user = useAppSelector((s) => s.auth.user)
 
   if (!user || user.role !== 'admin') {
-    return <Navigate to="/" replace />
+    return <Navigate to="/admin/login" replace />
   }
 
   return <Outlet />

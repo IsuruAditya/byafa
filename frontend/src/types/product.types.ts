@@ -3,9 +3,11 @@ export interface Product {
   name: string
   description: string
   price: number
+  costPrice: number
   images: string[]
   category: string
   stockQuantity: number
+  lowStockThreshold: number
   ratings: {
     average: number
     count: number

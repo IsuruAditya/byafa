@@ -13,11 +13,13 @@ import axios from 'axios'
 // Schema is only used for the type — validation is done manually in onSubmit
 // to avoid the Zod resolver / React Hook Form generic mismatch with numeric fields
 const schema = z.object({
-  name:          z.string().min(1, 'Name is required'),
-  description:   z.string().min(1, 'Description is required'),
-  price:         z.number().min(0, 'Price must be positive'),
-  category:      z.string().min(1, 'Category is required'),
-  stockQuantity: z.number().int().min(0, 'Stock must be non-negative'),
+  name:               z.string().min(1, 'Name is required'),
+  description:        z.string().min(1, 'Description is required'),
+  price:              z.number().min(0, 'Price must be positive'),
+  costPrice:          z.number().min(0, 'Cost price must be non-negative'),
+  category:           z.string().min(1, 'Category is required'),
+  stockQuantity:      z.number().int().min(0, 'Stock must be non-negative'),
+  lowStockThreshold:  z.number().int().min(0, 'Threshold must be non-negative'),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -40,7 +42,7 @@ export default function AdminProductForm() {
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     // No zodResolver — use native HTML validation + valueAsNumber
-    defaultValues: { name: '', description: '', price: 0, category: '', stockQuantity: 0 },
+    defaultValues: { name: '', description: '', price: 0, costPrice: 0, category: '', stockQuantity: 0, lowStockThreshold: 5 },
   })
 
   useEffect(() => {
@@ -49,11 +51,13 @@ export default function AdminProductForm() {
       if (res.success && res.data) {
         const p = res.data
         reset({
-          name:          p.name,
-          description:   p.description,
-          price:         p.price,
-          category:      p.category,
-          stockQuantity: p.stockQuantity,
+          name:               p.name,
+          description:        p.description,
+          price:              p.price,
+          costPrice:          p.costPrice ?? 0,
+          category:           p.category,
+          stockQuantity:      p.stockQuantity,
+          lowStockThreshold:  p.lowStockThreshold ?? 5,
         })
         setExistingImages(p.images)
       }
@@ -83,12 +87,14 @@ export default function AdminProductForm() {
 
   async function onSubmit(values: FormValues) {
     const formData = new FormData()
-    formData.append('name',           values.name)
-    formData.append('description',    values.description)
-    formData.append('price',          String(values.price))
-    formData.append('category',       values.category)
-    formData.append('stockQuantity',  String(values.stockQuantity))
-    formData.append('existingImages', JSON.stringify(existingImages))
+    formData.append('name',              values.name)
+    formData.append('description',       values.description)
+    formData.append('price',             String(values.price))
+    formData.append('costPrice',         String(values.costPrice))
+    formData.append('category',          values.category)
+    formData.append('stockQuantity',     String(values.stockQuantity))
+    formData.append('lowStockThreshold', String(values.lowStockThreshold))
+    formData.append('existingImages',    JSON.stringify(existingImages))
     newFiles.forEach((f) => formData.append('images', f))
 
     try {
@@ -131,7 +137,7 @@ export default function AdminProductForm() {
 
         <div className="grid grid-cols-2 gap-4">
           <Input
-            label="Price ($)"
+            label="Selling price ($)"
             type="number"
             step="0.01"
             min="0"
@@ -139,11 +145,29 @@ export default function AdminProductForm() {
             {...register('price', { valueAsNumber: true, required: 'Price is required', min: { value: 0, message: 'Price must be positive' } })}
           />
           <Input
+            label="Cost price / COGS ($)"
+            type="number"
+            step="0.01"
+            min="0"
+            error={errors.costPrice?.message}
+            {...register('costPrice', { valueAsNumber: true, min: { value: 0, message: 'Cost must be non-negative' } })}
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <Input
             label="Stock quantity"
             type="number"
             min="0"
             error={errors.stockQuantity?.message}
             {...register('stockQuantity', { valueAsNumber: true, required: 'Stock is required', min: { value: 0, message: 'Stock must be non-negative' } })}
+          />
+          <Input
+            label="Low stock alert threshold"
+            type="number"
+            min="0"
+            error={errors.lowStockThreshold?.message}
+            {...register('lowStockThreshold', { valueAsNumber: true, min: { value: 0, message: 'Threshold must be non-negative' } })}
           />
         </div>
 

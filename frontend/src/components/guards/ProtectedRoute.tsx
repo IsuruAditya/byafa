@@ -5,10 +5,11 @@ export function ProtectedRoute() {
   const { isAuthenticated, user } = useAppSelector((s) => s.auth)
   const location = useLocation()
 
-  // user === null and isAuthenticated === false means not logged in
-  // We check user specifically so we don't redirect before auth init resolves
   if (!isAuthenticated && user === null) {
-    return <Navigate to="/login" state={{ from: location }} replace />
+    // Admin paths redirect to the admin login portal, not the storefront login
+    const isAdminPath = location.pathname.startsWith('/admin')
+    const loginPath = isAdminPath ? '/admin/login' : '/login'
+    return <Navigate to={loginPath} state={{ from: location }} replace />
   }
 
   return <Outlet />

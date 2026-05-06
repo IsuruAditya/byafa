@@ -4,9 +4,11 @@ export interface IProduct extends Document {
   name: string
   description: string
   price: number
+  costPrice: number          // cost of goods — used for margin calculation
   images: string[]
   category: string
   stockQuantity: number
+  lowStockThreshold: number  // alert when stock falls at or below this value
   ratings: {
     average: number
     count: number
@@ -33,6 +35,11 @@ const productSchema = new Schema<IProduct>(
       required: [true, 'Price is required'],
       min: [0, 'Price cannot be negative'],
     },
+    costPrice: {
+      type: Number,
+      default: 0,
+      min: [0, 'Cost price cannot be negative'],
+    },
     images: {
       type: [String],
       default: [],
@@ -48,6 +55,11 @@ const productSchema = new Schema<IProduct>(
       required: true,
       min: [0, 'Stock cannot be negative'],
       default: 0,
+    },
+    lowStockThreshold: {
+      type: Number,
+      default: 5,
+      min: [0, 'Threshold cannot be negative'],
     },
     ratings: {
       average: { type: Number, default: 0, min: 0, max: 5 },

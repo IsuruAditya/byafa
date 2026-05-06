@@ -52,8 +52,10 @@ router.post(
     body('name').trim().notEmpty().withMessage('Name is required'),
     body('description').trim().notEmpty().withMessage('Description is required'),
     body('price').isFloat({ min: 0 }).withMessage('Price must be a positive number'),
+    body('costPrice').optional().isFloat({ min: 0 }).withMessage('Cost price must be non-negative'),
     body('category').trim().notEmpty().withMessage('Category is required'),
     body('stockQuantity').isInt({ min: 0 }).withMessage('Stock must be a non-negative integer'),
+    body('lowStockThreshold').optional().isInt({ min: 0 }).withMessage('Threshold must be non-negative'),
   ],
   validate,
   adminController.createProduct
@@ -67,8 +69,10 @@ router.put(
     body('name').trim().notEmpty().withMessage('Name is required'),
     body('description').trim().notEmpty().withMessage('Description is required'),
     body('price').isFloat({ min: 0 }).withMessage('Price must be a positive number'),
+    body('costPrice').optional().isFloat({ min: 0 }).withMessage('Cost price must be non-negative'),
     body('category').trim().notEmpty().withMessage('Category is required'),
     body('stockQuantity').isInt({ min: 0 }).withMessage('Stock must be a non-negative integer'),
+    body('lowStockThreshold').optional().isInt({ min: 0 }).withMessage('Threshold must be non-negative'),
   ],
   validate,
   adminController.updateProduct
@@ -137,6 +141,49 @@ router.get(
   ],
   validate,
   adminController.getRevenueSummary
+)
+
+// ── Inventory ─────────────────────────────────────────────────────────────────
+
+// GET /api/v1/admin/inventory
+router.get('/inventory', adminController.getInventoryOverview)
+
+// PATCH /api/v1/admin/inventory/:id/adjust
+router.patch(
+  '/inventory/:id/adjust',
+  [
+    body('adjustment').isInt().withMessage('adjustment must be an integer'),
+    body('note').optional().isString().trim(),
+  ],
+  validate,
+  adminController.adjustStock
+)
+
+// ── Customers ─────────────────────────────────────────────────────────────────
+
+// GET /api/v1/admin/customers
+router.get(
+  '/customers',
+  [
+    query('page').optional().isInt({ min: 1 }).toInt(),
+    query('pageSize').optional().isInt({ min: 1, max: 100 }).toInt(),
+    query('search').optional().isString().trim(),
+  ],
+  validate,
+  adminController.getCustomers
+)
+
+// ── Analytics ─────────────────────────────────────────────────────────────────
+
+// GET /api/v1/admin/analytics?from=&to=
+router.get(
+  '/analytics',
+  [
+    query('from').notEmpty().withMessage('from date is required'),
+    query('to').notEmpty().withMessage('to date is required'),
+  ],
+  validate,
+  adminController.getAnalytics
 )
 
 export default router

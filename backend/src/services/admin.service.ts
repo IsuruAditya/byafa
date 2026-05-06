@@ -54,17 +54,20 @@ export async function getAdminProducts(query: AdminProductQuery) {
   }
 }
 
-export interface ProductInput {  name: string
+export interface ProductInput {
+  name: string
   description: string
   price: number
+  costPrice?: number
   category: string
   stockQuantity: number
+  lowStockThreshold?: number
   imageFiles?: Express.Multer.File[]
   existingImages?: string[] // URLs to keep from a previous upload
 }
 
 export async function createProduct(input: ProductInput) {
-  const { name, description, price, category, stockQuantity, imageFiles = [], existingImages = [] } = input
+  const { name, description, price, costPrice = 0, category, stockQuantity, lowStockThreshold = 5, imageFiles = [], existingImages = [] } = input
 
   const uploadedUrls = await Promise.all(
     imageFiles.map((f) => uploadProductImage(f.buffer, f.originalname))
@@ -74,8 +77,10 @@ export async function createProduct(input: ProductInput) {
     name,
     description,
     price,
+    costPrice,
     category: category.toLowerCase(),
     stockQuantity,
+    lowStockThreshold,
     images: [...existingImages, ...uploadedUrls],
   })
 }
@@ -84,7 +89,7 @@ export async function updateProduct(
   productId: string,
   input: ProductInput
 ) {
-  const { name, description, price, category, stockQuantity, imageFiles = [], existingImages = [] } = input
+  const { name, description, price, costPrice = 0, category, stockQuantity, lowStockThreshold = 5, imageFiles = [], existingImages = [] } = input
 
   const product = await Product.findById(productId)
   if (!product) throw new AppError('Product not found', 404)
@@ -104,11 +109,13 @@ export async function updateProduct(
       name,
       description,
       price,
+      costPrice,
       category: category.toLowerCase(),
       stockQuantity,
+      lowStockThreshold,
       images: [...existingImages, ...uploadedUrls],
     },
-    { new: true, runValidators: true }
+    { returnDocument: 'after', runValidators: true }
   )
 }
 
@@ -127,7 +134,7 @@ export async function updateInventory(productId: string, stockQuantity: number) 
   const product = await Product.findByIdAndUpdate(
     productId,
     { stockQuantity },
-    { new: true, runValidators: true }
+    { returnDocument: 'after', runValidators: true }
   )
   if (!product) throw new AppError('Product not found', 404)
   return product
@@ -310,5 +317,229 @@ export async function getRevenueSummary(from: string, to: string) {
     averageOrderValue: result ? Math.round((result.averageOrderValue as number) * 100) / 100 : 0,
     from: fromDate.toISOString(),
     to:   toDate.toISOString(),
+  }
+}
+
+export async function getRevenueSummary(from: string, to: string) {
+  const fromDate = new Date(from)
+  const toDate   = new Date(to)
+
+  if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
+    throw new AppError('Invalid date range', 400)
+  }
+
+  const [result] = await Order.aggregate([
+    {
+      $match: {
+        createdAt: { $gte: fromDate, $lte: toDate },
+        status: { $in: ['processing', 'shipped', 'delivered'] },
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        totalRevenue:      { $sum: '$totalAmount' },
+        totalOrders:       { $sum: 1 },
+        averageOrderValue: { $avg: '$totalAmount' },
+      },
+    },
+  ])
+
+  return {
+    totalRevenue:      result ? (result.totalRevenue as number)      : 0,
+    totalOrders:       result ? (result.totalOrders as number)       : 0,
+    averageOrderValue: result ? Math.round((result.averageOrderValue as number) * 100) / 100 : 0,
+    from: fromDate.toISOString(),
+    to:   toDate.toISOString(),
+  }
+}
+
+// ── Inventory Overview ──────────────────────────────────────────────────────
+
+export type StockStatus = 'in_stock' | 'low_stock' | 'out_of_stock'
+
+export interface InventoryItem {
+  _id: string
+  name: string
+  category: string
+  price: number
+  costPrice: number
+  stockQuantity: number
+  lowStockThreshold: number
+  images: string[]
+  status: StockStatus
+}
+
+export async function getInventoryOverview() {
+  const products = await Product.find()
+    .select('name category price costPrice stockQuantity lowStockThreshold images')
+    .sort({ stockQuantity: 1 })
+    .lean()
+
+  const items: InventoryItem[] = products.map((p) => {
+    let status: StockStatus = 'in_stock'
+    if (p.stockQuantity === 0) status = 'out_of_stock'
+    else if (p.stockQuantity <= (p.lowStockThreshold ?? 5)) status = 'low_stock'
+
+    return {
+      _id: (p._id as { toString(): string }).toString(),
+      name: p.name,
+      category: p.category,
+      price: p.price,
+      costPrice: p.costPrice ?? 0,
+      stockQuantity: p.stockQuantity,
+      lowStockThreshold: p.lowStockThreshold ?? 5,
+      images: p.images,
+      status,
+    }
+  })
+
+  const outOfStock = items.filter((i) => i.status === 'out_of_stock').length
+  const lowStock   = items.filter((i) => i.status === 'low_stock').length
+  const inStock    = items.filter((i) => i.status === 'in_stock').length
+  const totalUnits = items.reduce((s, i) => s + i.stockQuantity, 0)
+  const totalValue = items.reduce((s, i) => s + i.stockQuantity * i.costPrice, 0)
+
+  return { items, summary: { outOfStock, lowStock, inStock, totalUnits, totalValue } }
+}
+
+export async function adjustStock(
+  productId: string,
+  adjustment: number,
+  note?: string
+) {
+  void note // reserved for future stock-movement log
+  const product = await Product.findById(productId)
+  if (!product) throw new AppError('Product not found', 404)
+
+  const newQty = product.stockQuantity + adjustment
+  if (newQty < 0) throw new AppError('Adjustment would result in negative stock', 400)
+
+  return Product.findByIdAndUpdate(
+    productId,
+    { stockQuantity: newQty },
+    { returnDocument: 'after', runValidators: true }
+  )
+}
+
+// ── Customers ───────────────────────────────────────────────────────────────
+
+export interface CustomerQuery {
+  search?: string
+  page?: number
+  pageSize?: number
+}
+
+export async function getCustomers(query: CustomerQuery) {
+  const { search, page = 1, pageSize = 20 } = query
+
+  const filter: Record<string, unknown> = { role: 'customer' }
+  if (search?.trim()) {
+    filter['$or'] = [
+      { name:  { $regex: search.trim(), $options: 'i' } },
+      { email: { $regex: search.trim(), $options: 'i' } },
+    ]
+  }
+
+  const safePage     = Math.max(1, page)
+  const safePageSize = Math.min(Math.max(1, pageSize), 100)
+  const skip         = (safePage - 1) * safePageSize
+
+  const [users, total] = await Promise.all([
+    User.find(filter)
+      .select('name email createdAt')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(safePageSize)
+      .lean(),
+    User.countDocuments(filter),
+  ])
+
+  // Enrich with order stats per customer
+  const userIds = users.map((u) => u._id)
+  const orderStats = await Order.aggregate([
+    { $match: { userId: { $in: userIds }, status: { $in: ['processing', 'shipped', 'delivered'] } } },
+    { $group: { _id: '$userId', orderCount: { $sum: 1 }, totalSpent: { $sum: '$totalAmount' } } },
+  ])
+
+  const statsMap = new Map(
+    orderStats.map((s) => [s._id.toString(), { orderCount: s.orderCount as number, totalSpent: s.totalSpent as number }])
+  )
+
+  const data = users.map((u) => {
+    const stats = statsMap.get((u._id as { toString(): string }).toString()) ?? { orderCount: 0, totalSpent: 0 }
+    return {
+      _id: (u._id as { toString(): string }).toString(),
+      name: u.name,
+      email: u.email,
+      createdAt: u.createdAt,
+      orderCount: stats.orderCount,
+      totalSpent: stats.totalSpent,
+    }
+  })
+
+  return {
+    data,
+    pagination: { page: safePage, pageSize: safePageSize, total, totalPages: Math.ceil(total / safePageSize) },
+  }
+}
+
+// ── Analytics ───────────────────────────────────────────────────────────────
+
+export async function getAnalytics(from: string, to: string) {
+  const fromDate = new Date(from)
+  const toDate   = new Date(to)
+
+  if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
+    throw new AppError('Invalid date range', 400)
+  }
+
+  const matchPaid = {
+    createdAt: { $gte: fromDate, $lte: toDate },
+    status: { $in: ['processing', 'shipped', 'delivered'] },
+  }
+
+  const [topProducts, ordersByStatus, revenueByDay] = await Promise.all([
+    // Top 10 products by revenue in period
+    Order.aggregate([
+      { $match: matchPaid },
+      { $unwind: '$items' },
+      {
+        $group: {
+          _id: '$items.productId',
+          name:        { $first: '$items.name' },
+          image:       { $first: '$items.image' },
+          unitsSold:   { $sum: '$items.quantity' },
+          revenue:     { $sum: { $multiply: ['$items.price', '$items.quantity'] } },
+        },
+      },
+      { $sort: { revenue: -1 } },
+      { $limit: 10 },
+    ]),
+
+    // Orders grouped by status
+    Order.aggregate([
+      { $match: { createdAt: { $gte: fromDate, $lte: toDate } } },
+      { $group: { _id: '$status', count: { $sum: 1 } } },
+    ]),
+
+    // Daily revenue for the period
+    Order.aggregate([
+      { $match: matchPaid },
+      {
+        $group: {
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+          revenue: { $sum: '$totalAmount' },
+          orders:  { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]),
+  ])
+
+  return {
+    topProducts: topProducts as Array<{ _id: string; name: string; image: string; unitsSold: number; revenue: number }>,
+    ordersByStatus: ordersByStatus as Array<{ _id: string; count: number }>,
+    revenueByDay: revenueByDay as Array<{ _id: string; revenue: number; orders: number }>,
   }
 }

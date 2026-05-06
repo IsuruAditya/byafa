@@ -54,7 +54,7 @@ const authLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: 'Too many authentication attempts, please try again later.' },
-  skip: () => env.NODE_ENV === 'test',
+  skip: () => env.NODE_ENV === 'test' || env.NODE_ENV === 'development',
 })
 
 app.use(globalLimiter)

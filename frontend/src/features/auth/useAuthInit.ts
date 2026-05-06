@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { useAppDispatch } from '../../store/hooks'
 import { setCredentials, updateAccessToken } from '../../store/slices/authSlice'
 import { getMeApi } from '../../api/authApi'
-import axiosInstance from '../../api/axiosInstance'
 import { store } from '../../store'
 import axios from 'axios'
 
@@ -10,14 +9,11 @@ import axios from 'axios'
  * Runs once on app mount to rehydrate auth state from the server.
  *
  * Flow:
- * 1. Call GET /auth/me with the current access token (empty on hard refresh)
- * 2. If 401, the Axios interceptor automatically calls POST /auth/refresh
- *    using the httpOnly refresh token cookie, gets a new access token,
- *    updates Redux, and retries the /me request
- * 3. If refresh also fails (no valid session), user stays logged out
- *
- * This prevents the ProtectedRoute from flashing the login page for
- * authenticated users on hard refresh.
+ * 1. If no access token in Redux, attempt a silent refresh via the httpOnly
+ *    refresh cookie using a plain axios call (bypasses the interceptor to
+ *    avoid retry loops).
+ * 2. If refresh succeeds, store the new token and call GET /auth/me.
+ * 3. If refresh fails (no valid session), mark init as done — user is logged out.
  */
 export function useAuthInit() {
   const dispatch = useAppDispatch()
@@ -28,49 +24,51 @@ export function useAuthInit() {
 
     async function init() {
       try {
-        // Attempt to get a fresh access token via the refresh cookie first.
-        // This ensures we always have a valid token even after a hard refresh
-        // where the Redux store is empty.
         const currentToken = store.getState().auth.accessToken
+
         if (!currentToken) {
+          // Use a plain axios instance — NOT the intercepted axiosInstance —
+          // to avoid the response interceptor triggering another refresh on 401,
+          // which would cause an infinite loop.
           try {
-            const { data } = await axiosInstance.post<{
+            const baseURL = import.meta.env.VITE_API_URL ?? 'http://localhost:5000/api/v1'
+            const { data } = await axios.post<{
               success: boolean
               data: { accessToken: string }
-            }>('/auth/refresh')
-            if (data.success && data.data.accessToken) {
+            }>(
+              `${baseURL}/auth/refresh`,
+              {},
+              { withCredentials: true }
+            )
+            if (data.success && data.data?.accessToken) {
               dispatch(updateAccessToken(data.data.accessToken))
+            } else {
+              // Refresh returned success:false — no valid session
+              return
             }
           } catch {
-            // No valid refresh token — user is not authenticated
+            // 401 or network error — no valid session, stay logged out
             return
           }
         }
 
+        // We have a valid access token — fetch the user profile
         const res = await getMeApi()
         if (!cancelled && res.success && res.data) {
           const latestToken = store.getState().auth.accessToken ?? ''
-          dispatch(
-            setCredentials({
-              user: res.data.user,
-              accessToken: latestToken,
-            })
-          )
+          dispatch(setCredentials({ user: res.data.user, accessToken: latestToken }))
         }
       } catch (err) {
         if (!axios.isAxiosError(err) || err.response?.status !== 401) {
           console.error('Auth init error:', err)
         }
-        // 401 means no valid session — user stays logged out, which is correct
       } finally {
         if (!cancelled) setIsInitializing(false)
       }
     }
 
     void init()
-    return () => {
-      cancelled = true
-    }
+    return () => { cancelled = true }
   }, [dispatch])
 
   return { isInitializing }

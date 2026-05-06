@@ -25,12 +25,14 @@ export async function createProduct(req: Request, res: Response): Promise<void> 
     : []
 
   const product = await adminService.createProduct({
-    name:          req.body['name'] as string,
-    description:   req.body['description'] as string,
-    price:         parseFloat(req.body['price'] as string),
-    category:      req.body['category'] as string,
-    stockQuantity: parseInt(req.body['stockQuantity'] as string, 10),
-    imageFiles:    files,
+    name:               req.body['name'] as string,
+    description:        req.body['description'] as string,
+    price:              parseFloat(req.body['price'] as string),
+    costPrice:          req.body['costPrice'] ? parseFloat(req.body['costPrice'] as string) : 0,
+    category:           req.body['category'] as string,
+    stockQuantity:      parseInt(req.body['stockQuantity'] as string, 10),
+    lowStockThreshold:  req.body['lowStockThreshold'] ? parseInt(req.body['lowStockThreshold'] as string, 10) : 5,
+    imageFiles:         files,
     existingImages,
   })
 
@@ -44,12 +46,14 @@ export async function updateProduct(req: Request, res: Response): Promise<void> 
     : []
 
   const product = await adminService.updateProduct(req.params['id'] as string, {
-    name:          req.body['name'] as string,
-    description:   req.body['description'] as string,
-    price:         parseFloat(req.body['price'] as string),
-    category:      req.body['category'] as string,
-    stockQuantity: parseInt(req.body['stockQuantity'] as string, 10),
-    imageFiles:    files,
+    name:               req.body['name'] as string,
+    description:        req.body['description'] as string,
+    price:              parseFloat(req.body['price'] as string),
+    costPrice:          req.body['costPrice'] ? parseFloat(req.body['costPrice'] as string) : 0,
+    category:           req.body['category'] as string,
+    stockQuantity:      parseInt(req.body['stockQuantity'] as string, 10),
+    lowStockThreshold:  req.body['lowStockThreshold'] ? parseInt(req.body['lowStockThreshold'] as string, 10) : 5,
+    imageFiles:         files,
     existingImages,
   })
 
@@ -124,4 +128,41 @@ export async function getRevenueSummary(req: Request, res: Response): Promise<vo
 
   const summary = await adminService.getRevenueSummary(from, to)
   res.status(200).json({ success: true, data: summary })
+}
+
+// ── Inventory ────────────────────────────────────────────────────────────────
+
+export async function getInventoryOverview(_req: Request, res: Response): Promise<void> {
+  const result = await adminService.getInventoryOverview()
+  res.status(200).json({ success: true, data: result })
+}
+
+export async function adjustStock(req: Request, res: Response): Promise<void> {
+  const { adjustment, note } = req.body as { adjustment: number; note?: string }
+  const product = await adminService.adjustStock(req.params['id'] as string, adjustment, note)
+  res.status(200).json({ success: true, data: product })
+}
+
+// ── Customers ────────────────────────────────────────────────────────────────
+
+export async function getCustomers(req: Request, res: Response): Promise<void> {
+  const { search, page, pageSize } = req.query as Record<string, string | undefined>
+  const result = await adminService.getCustomers({
+    search,
+    page:     page     ? parseInt(page, 10)     : undefined,
+    pageSize: pageSize ? parseInt(pageSize, 10) : undefined,
+  })
+  res.status(200).json({ success: true, ...result })
+}
+
+// ── Analytics ────────────────────────────────────────────────────────────────
+
+export async function getAnalytics(req: Request, res: Response): Promise<void> {
+  const { from, to } = req.query as { from?: string; to?: string }
+  if (!from || !to) {
+    res.status(400).json({ success: false, message: 'from and to query params are required' })
+    return
+  }
+  const result = await adminService.getAnalytics(from, to)
+  res.status(200).json({ success: true, data: result })
 }

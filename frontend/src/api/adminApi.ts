@@ -141,3 +141,97 @@ export async function adminGetRevenueSummaryApi(
   )
   return data
 }
+
+// ── Inventory ─────────────────────────────────────────────────────────────────
+
+export type StockStatus = 'in_stock' | 'low_stock' | 'out_of_stock'
+
+export interface InventoryItem {
+  _id: string
+  name: string
+  category: string
+  price: number
+  costPrice: number
+  stockQuantity: number
+  lowStockThreshold: number
+  images: string[]
+  status: StockStatus
+}
+
+export interface InventoryOverview {
+  items: InventoryItem[]
+  summary: {
+    outOfStock: number
+    lowStock: number
+    inStock: number
+    totalUnits: number
+    totalValue: number
+  }
+}
+
+export async function adminGetInventoryApi(): Promise<ApiResponse<InventoryOverview>> {
+  const { data } = await axiosInstance.get<ApiResponse<InventoryOverview>>('/admin/inventory')
+  return data
+}
+
+export async function adminAdjustStockApi(
+  id: string,
+  adjustment: number,
+  note?: string
+): Promise<ApiResponse<Product>> {
+  const { data } = await axiosInstance.patch<ApiResponse<Product>>(
+    `/admin/inventory/${id}/adjust`,
+    { adjustment, note }
+  )
+  return data
+}
+
+// ── Customers ─────────────────────────────────────────────────────────────────
+
+export interface CustomerRecord {
+  _id: string
+  name: string
+  email: string
+  createdAt: string
+  orderCount: number
+  totalSpent: number
+}
+
+export async function adminGetCustomersApi(params: {
+  search?: string
+  page?: number
+  pageSize?: number
+} = {}): Promise<PaginatedResponse<CustomerRecord>> {
+  const { data } = await axiosInstance.get<PaginatedResponse<CustomerRecord>>(
+    '/admin/customers',
+    { params }
+  )
+  return data
+}
+
+// ── Analytics ─────────────────────────────────────────────────────────────────
+
+export interface TopProduct {
+  _id: string
+  name: string
+  image: string
+  unitsSold: number
+  revenue: number
+}
+
+export interface AnalyticsData {
+  topProducts: TopProduct[]
+  ordersByStatus: Array<{ _id: string; count: number }>
+  revenueByDay: Array<{ _id: string; revenue: number; orders: number }>
+}
+
+export async function adminGetAnalyticsApi(
+  from: string,
+  to: string
+): Promise<ApiResponse<AnalyticsData>> {
+  const { data } = await axiosInstance.get<ApiResponse<AnalyticsData>>(
+    '/admin/analytics',
+    { params: { from, to } }
+  )
+  return data
+}
