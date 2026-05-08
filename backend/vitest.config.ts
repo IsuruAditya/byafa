@@ -36,6 +36,9 @@ export default defineConfig(({ mode }) => {
         forks: { singleFork: true },
       },
       testTimeout: 30000,
+      // Only pick up source test files, not compiled dist/ output
+      include: ['src/**/*.test.ts'],
+      exclude: ['dist/**', 'node_modules/**'],
     },
   }
 })

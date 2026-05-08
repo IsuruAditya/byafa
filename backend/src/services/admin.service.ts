@@ -304,40 +304,6 @@ export async function getRevenueSummary(from: string, to: string) {
     {
       $group: {
         _id: null,
-        totalRevenue:    { $sum: '$totalAmount' },
-        totalOrders:     { $sum: 1 },
-        averageOrderValue: { $avg: '$totalAmount' },
-      },
-    },
-  ])
-
-  return {
-    totalRevenue:      result ? (result.totalRevenue as number)      : 0,
-    totalOrders:       result ? (result.totalOrders as number)       : 0,
-    averageOrderValue: result ? Math.round((result.averageOrderValue as number) * 100) / 100 : 0,
-    from: fromDate.toISOString(),
-    to:   toDate.toISOString(),
-  }
-}
-
-export async function getRevenueSummary(from: string, to: string) {
-  const fromDate = new Date(from)
-  const toDate   = new Date(to)
-
-  if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
-    throw new AppError('Invalid date range', 400)
-  }
-
-  const [result] = await Order.aggregate([
-    {
-      $match: {
-        createdAt: { $gte: fromDate, $lte: toDate },
-        status: { $in: ['processing', 'shipped', 'delivered'] },
-      },
-    },
-    {
-      $group: {
-        _id: null,
         totalRevenue:      { $sum: '$totalAmount' },
         totalOrders:       { $sum: 1 },
         averageOrderValue: { $avg: '$totalAmount' },
