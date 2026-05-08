@@ -10,13 +10,21 @@
       },
       "ios": {
         "simulator": false
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://byafa-be.onrender.com/api/v1",
+        "EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY": "pk_test_51RiuhS4K3H3CY8iLkopMUzzvjFBjadaqxthtsZJMohTIaVNDTs2nylkErUQjjyY5ZkZdD2NSyVtqH7TA49hpKFyl009XqKKcLZ"
       }
     },
     "production": {
       "android": {
         "buildType": "app-bundle"
       },
-      "ios": {}
+      "ios": {},
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://byafa-be.onrender.com/api/v1",
+        "EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY": "pk_test_51RiuhS4K3H3CY8iLkopMUzzvjFBjadaqxthtsZJMohTIaVNDTs2nylkErUQjjyY5ZkZdD2NSyVtqH7TA49hpKFyl009XqKKcLZ"
+      }
     }
   },
   "submit": {
