@@ -7,6 +7,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   TouchableOpacity,
+  Image,
 } from 'react-native'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -20,7 +21,6 @@ import { setCredentials } from '../../store/slices/authSlice'
 import { registerApi } from '../../api/authApi'
 import { Input } from '../../components/ui/Input'
 import { Button } from '../../components/ui/Button'
-import { Logo } from '../../components/ui/Logo'
 import { spacing, fontSize, fontWeight, radius } from '../../constants/theme'
 import { useTheme } from '../../hooks/useTheme'
 import { Ionicons } from '@expo/vector-icons'
@@ -81,8 +81,11 @@ export default function RegisterScreen({ navigation }: Props) {
       >
         {/* ── Brand ── */}
         <View style={styles.brand}>
-          <Logo size={64} />
-          <Text style={[styles.brandName, { color: colors.text }]}>Byafa</Text>
+          <Image
+            source={require('../../../assets/logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
         </View>
 
         {/* ── Card ── */}
@@ -229,10 +232,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
   },
-  brandName: {
-    fontSize: fontSize.xxxl,
-    fontWeight: fontWeight.extrabold,
-    letterSpacing: -0.5,
+  logo: {
+    width: 160,
+    height: 80,
   },
 
   // Card

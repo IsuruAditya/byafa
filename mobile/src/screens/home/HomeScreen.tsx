@@ -24,7 +24,6 @@ import { spacing, fontSize, fontWeight, radius, shadows } from '../../constants/
 import { useTheme } from '../../hooks/useTheme'
 import { formatCurrency } from '../../utils/formatCurrency'
 import { StarRating } from '../../components/ui/StarRating'
-import { Logo } from '../../components/ui/Logo'
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'Home'>
 type TabNav = BottomTabNavigationProp<MainTabParamList>
@@ -78,7 +77,11 @@ export default function HomeScreen({ navigation }: Props) {
       {/* ── Top bar ── */}
       <View style={[styles.topBar, { backgroundColor: colors.background }]}>
         <View style={styles.topLeft}>
-          <Logo size={32} />
+          <Image
+            source={require('../../../assets/logo.png')}
+            style={styles.topLogo}
+            resizeMode="contain"
+          />
           <View>
             <Text style={[styles.greeting, { color: colors.textSecondary }]}>
               {greeting()}, {user?.name?.split(' ')[0] ?? 'there'} 👋
@@ -285,6 +288,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
+  },
+  topLogo: {
+    width: 72,
+    height: 32,
   },
   greeting: { fontSize: fontSize.sm },
   topTitle: { fontSize: fontSize.xl, fontWeight: fontWeight.bold, marginTop: 2 },
