@@ -12,36 +12,45 @@ so that orders and payment data can be stored and queried.
 
 ## Acceptance Criteria
 
-**AC1 — Order model:**
-Given the backend is running
-When the Order model is defined
-Then it includes: `userId`, `items` (array of `{ productId, name, price, quantity }`), `shippingAddress`, `totalAmount`, `status` (enum: `pending|processing|shipped|delivered|cancelled`), `stripePaymentIntentId`, `stripeChargeId`, `createdAt`, `updatedAt`
-And MongoDB indexes exist on `userId`, `status`, and `createdAt`
-And `timestamps: true` is set on the schema
+**AC1 — Order schema:**
+Given the Order model is defined
+Then it includes: `userId`, `items[]`, `shippingAddress`, `totalAmount`, `status`, `stripePaymentIntentId`, `stripeChargeId`, `createdAt`, `updatedAt`
+And `status` is an enum: `pending | processing | shipped | delivered | cancelled`
+And `stripePaymentIntentId` has a unique index (idempotency guard)
+And `items` validates `length > 0`
+And `timestamps: true` is set
 
-**AC2 — RefreshToken model:**
-Given the backend is running
-When the RefreshToken model is defined
-Then it stores `userId`, `token` (SHA-256 hashed), `expiresAt`
-And a TTL index on `expiresAt` auto-deletes expired tokens
+**AC2 — Order indexes:**
+Then indexes exist on:
+- `{ userId: 1, createdAt: -1 }` — customer order history
+- `{ status: 1, createdAt: -1 }` — admin order management
+- `{ createdAt: -1 }` — recent orders polling
+
+**AC3 — Sub-document schemas:**
+Then `IOrderItem` has: `productId`, `name`, `price`, `quantity`, `image`
+And `IShippingAddress` has: `fullName`, `addressLine1`, `addressLine2?`, `city`, `state`, `postalCode`, `country`
+And both use `{ _id: false }` (no sub-document IDs needed)
 
 ## Tasks
 
-- [x] `backend/src/models/Order.model.ts` — Order schema with all fields and indexes
-- [x] `backend/src/models/RefreshToken.model.ts` — RefreshToken schema with TTL index
+- [x] `backend/src/models/Order.model.ts` — full schema with sub-documents and indexes
 
 ## Dev Notes
 
-### Architecture references
-- Order status enum: `['pending', 'processing', 'shipped', 'delivered', 'cancelled']`
-- Shipping address sub-document: `{ fullName, addressLine1, city, state, postalCode, country }`
-- Order item sub-document: `{ productId, name, price, quantity, image }`
-- RefreshToken: store SHA-256 hash of raw token, compare hash on refresh
-- TTL index: `{ expiresAt: 1 }` with `expireAfterSeconds: 0`
+### OrderStatus type
+```ts
+export type OrderStatus = 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
+```
+Exported from model file — used in services and controllers.
 
-### Key files
-- `backend/src/models/Order.model.ts` — Order schema
-- `backend/src/models/RefreshToken.model.ts` — RefreshToken schema
+### stripePaymentIntentId unique index
+This is the idempotency mechanism. If Stripe delivers the same webhook twice,
+the second `Order.create()` will throw a duplicate key error (code 11000),
+which the webhook handler catches and ignores (returns 200 to Stripe).
+
+### price snapshot
+`items[].price` stores the price at time of order — never recalculated from current product price.
+This is critical for order history accuracy.
 
 ## Dev Agent Record
 
@@ -49,11 +58,10 @@ And a TTL index on `expiresAt` auto-deletes expired tokens
 Claude (Kiro)
 
 ### Completion Notes
-- ✅ Order model with all required fields, status enum, compound indexes
-- ✅ Shipping address as embedded sub-document
-- ✅ RefreshToken model with TTL index for automatic expiry cleanup
-- ✅ Both models use `timestamps: true`
+- ✅ Order model with all fields, sub-document schemas, indexes
+- ✅ `stripePaymentIntentId` unique index for webhook idempotency
+- ✅ `items` array validator: `v.length > 0`
+- ✅ `OrderStatus` type exported
 
 ### File List
 - `backend/src/models/Order.model.ts`
-- `backend/src/models/RefreshToken.model.ts`

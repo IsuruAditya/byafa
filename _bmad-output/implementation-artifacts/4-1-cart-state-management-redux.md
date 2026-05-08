@@ -12,46 +12,56 @@ so that cart state is consistent for both guest and authenticated users.
 
 ## Acceptance Criteria
 
-**AC1 — Cart slice structure:**
-Given the Redux store is initialized
-When `cartSlice` is configured
-Then it manages `items: [{ productId, name, price, image, quantity, stockQuantity }]`
-And `totalItems` and `totalPrice` are derived from items
+**AC1 — Cart shape:**
+`cartSlice` manages `items: CartItem[]` where each item has:
+`{ productId, name, price, image, quantity, stockQuantity }`
 
 **AC2 — localStorage persistence:**
-Given any cart action is dispatched
-When the state changes
-Then the updated cart is synced to `localStorage` under the key `cart`
-And on app init, cart is rehydrated from `localStorage`
+Every state change syncs to `localStorage` key `'cart'` via `saveCartToStorage()`
+On app init, cart is rehydrated from `localStorage` in `initialState`
 
-**AC3 — Cart merge on login:**
-Given a guest user has items in their cart
-When they log in
-Then guest cart items are merged with any existing cart state
-And guest item quantities take precedence
+**AC3 — Merge on login:**
+`mergeCart(serverItems)` action merges server items into guest cart
+Guest quantities take precedence — server items only added if not already in cart
 
-**AC4 — Cart clear on logout:**
-Given a user logs out
-When the logout action is dispatched
-Then the cart is cleared from both Redux state and `localStorage`
+**AC4 — Clear on logout:**
+`clearCart()` removes items from state and `localStorage.removeItem('cart')`
+
+**AC5 — Quantity bounds:**
+`addToCart` caps quantity at `stockQuantity`
+`updateQuantity` with quantity ≤ 0 removes the item
 
 ## Tasks
 
-- [x] `frontend/src/store/slices/cartSlice.ts` — cart slice with all actions
-- [x] `frontend/src/store/index.ts` — store subscriber for localStorage sync
-- [x] `frontend/src/store/hooks.ts` — typed `useAppDispatch` and `useAppSelector`
+- [x] `frontend/src/store/slices/cartSlice.ts` — full slice with all actions
+- [x] `frontend/src/store/index.ts` — registers cartReducer
 
 ## Dev Notes
 
-### Architecture references
-- localStorage key: `cart`
-- Cart item shape: `{ productId, name, price, image, quantity, stockQuantity }`
-- Merge strategy: if same productId exists, keep guest quantity (don't double-count)
-- Store subscriber: `store.subscribe(() => localStorage.setItem('cart', JSON.stringify(store.getState().cart)))`
+### localStorage sync pattern
+Each reducer calls `saveCartToStorage(state.items)` at the end — not a middleware.
+This is simpler than redux-persist for this use case.
 
-### Key files
-- `frontend/src/store/slices/cartSlice.ts` — `addToCart`, `updateQuantity`, `removeFromCart`, `clearCart`, `mergeCart`
-- `frontend/src/store/index.ts` — root reducer, store config, localStorage subscriber
+```ts
+function saveCartToStorage(items: CartItem[]): void {
+  localStorage.setItem('cart', JSON.stringify(items))
+}
+function loadCartFromStorage(): CartItem[] {
+  try {
+    const raw = localStorage.getItem('cart')
+    return raw ? JSON.parse(raw) : []
+  } catch { return [] }
+}
+const initialState: CartState = { items: loadCartFromStorage() }
+```
+
+### mergeCart action
+Used when user logs in — guest cart already in Redux, server cart passed as payload.
+Only adds server items that don't already exist in guest cart (no quantity override).
+
+### Mobile cart
+Mobile `cartSlice` is identical but WITHOUT localStorage persistence — in-memory only.
+Cart clears on app restart on mobile (acceptable for MVP).
 
 ## Dev Agent Record
 
@@ -59,13 +69,11 @@ Then the cart is cleared from both Redux state and `localStorage`
 Claude (Kiro)
 
 ### Completion Notes
-- ✅ cartSlice with addToCart, updateQuantity, removeFromCart, clearCart actions
-- ✅ localStorage persistence via store subscriber
-- ✅ Cart rehydration on app init
-- ✅ mergeCart action for login flow
-- ✅ Typed hooks for useAppDispatch and useAppSelector
+- ✅ cartSlice with addToCart, updateQuantity, removeFromCart, mergeCart, clearCart
+- ✅ localStorage rehydration in initialState
+- ✅ saveCartToStorage called in every mutating reducer
+- ✅ Quantity capped at stockQuantity in addToCart and updateQuantity
 
 ### File List
 - `frontend/src/store/slices/cartSlice.ts`
 - `frontend/src/store/index.ts`
-- `frontend/src/store/hooks.ts`

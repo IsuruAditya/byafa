@@ -13,42 +13,49 @@ so that I can manage what I intend to purchase.
 ## Acceptance Criteria
 
 **AC1 — Add to cart:**
-Given I am on a product detail page
-When I click "Add to Cart"
-Then the product is added to `cartSlice` with quantity 1
-And if the product is already in the cart, the quantity increments by 1
-And quantity cannot exceed `stockQuantity`
-And a toast notification confirms the item was added
+Given I click "Add to Cart" on a product detail page
+Then the product is added to cartSlice with quantity 1
+And if already in cart, quantity increments by 1 (capped at stockQuantity)
+And a success toast fires: "{product.name} added to cart"
 
 **AC2 — Update quantity:**
-Given I am on the cart page
-When I change the quantity input for an item
-Then `cartSlice` updates the quantity for that item
-And setting quantity to 0 removes the item from the cart
-And quantity cannot exceed `stockQuantity`
+Given I change the quantity input on the cart page
+Then cartSlice updates the quantity for that item
+And setting quantity to 0 removes the item
 
 **AC3 — Remove item:**
 Given I click "Remove" on a cart item
-When the action is dispatched
-Then the item is removed from `cartSlice` and `localStorage`
+Then the item is removed from cartSlice and localStorage
+
+**AC4 — Max quantity guard:**
+Given the item quantity equals stockQuantity
+Then "Add to Cart" shows "Max quantity in cart" and is disabled
 
 ## Tasks
 
-- [x] `frontend/src/features/cart/CartItemRow.tsx` — cart item row with quantity controls
-- [x] `frontend/src/store/slices/cartSlice.ts` — `addToCart`, `updateQuantity`, `removeFromCart` actions
-- [x] `frontend/src/components/ui/Toast.tsx` — toast notification component
+- [x] `frontend/src/features/products/ProductDetailPage.tsx` — Add to Cart button + handler
+- [x] `frontend/src/features/cart/CartItemRow.tsx` — quantity controls + remove button
+- [x] `frontend/src/store/slices/cartSlice.ts` — addToCart, updateQuantity, removeFromCart
 
 ## Dev Notes
 
-### Architecture references
-- Stock guard: `Math.min(quantity + 1, stockQuantity)` when adding
-- Toast: dispatch `showToast({ message, type })` to `uiSlice`
-- Quantity input: controlled input with min=1, max=stockQuantity
+### Add to cart handler (ProductDetailPage)
+```ts
+dispatch(addToCart({ productId, name, price, image, quantity: 1, stockQuantity: stock }))
+dispatch(addToast({ message: `${product.name} added to cart`, type: 'success' }))
+await refresh() // re-fetch stock from server
+```
 
-### Key files
-- `frontend/src/store/slices/cartSlice.ts` — cart actions
-- `frontend/src/store/slices/uiSlice.ts` — toast actions
-- `frontend/src/features/cart/CartItemRow.tsx` — quantity controls UI
+### CartItemRow quantity controls
+- Decrement button: `dispatch(updateQuantity({ productId, quantity: item.quantity - 1 }))`
+- Setting to 0 triggers removal via the `updateQuantity` reducer logic
+- Increment disabled when `item.quantity >= item.stockQuantity`
+
+### canAddMore check (ProductDetailPage)
+```ts
+const cartQuantity = useAppSelector(s => s.cart.items.find(i => i.productId === id)?.quantity ?? 0)
+const canAddMore = stock > cartQuantity
+```
 
 ## Dev Agent Record
 
@@ -56,13 +63,12 @@ Then the item is removed from `cartSlice` and `localStorage`
 Claude (Kiro)
 
 ### Completion Notes
-- ✅ addToCart increments quantity if item already in cart
-- ✅ Quantity capped at stockQuantity
-- ✅ Toast notification on add-to-cart success
-- ✅ CartItemRow with increment/decrement buttons and remove button
-- ✅ Setting quantity to 0 removes item
+- ✅ Add to Cart with stock refresh after dispatch
+- ✅ CartItemRow with +/- controls, remove button
+- ✅ Max quantity guard on Add to Cart button
+- ✅ Toast notification on add
 
 ### File List
+- `frontend/src/features/products/ProductDetailPage.tsx`
 - `frontend/src/features/cart/CartItemRow.tsx`
 - `frontend/src/store/slices/cartSlice.ts`
-- `frontend/src/components/ui/Toast.tsx`

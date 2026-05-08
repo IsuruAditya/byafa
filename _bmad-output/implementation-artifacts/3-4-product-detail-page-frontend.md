@@ -12,51 +12,69 @@ so that I can make an informed purchase decision.
 
 ## Acceptance Criteria
 
-**AC1 — Product information:**
-Given I navigate to a product detail page
-When the page loads
-Then I see the product name, description, price, category, and stock status
-And product images are displayed with lazy loading
-And the average rating and review count are shown
+**AC1 — Product info:**
+Given I navigate to `/products/:id`
+Then I see name, description, price, category, stock status, and average rating
+And product images are displayed with a thumbnail strip and lightbox on click
+And React Helmet sets `<title>{product.name} | Byafa</title>` and `<meta description>`
 
-**AC2 — Add to cart:**
-Given the product is in stock
-When I click "Add to Cart"
-Then the product is added to my cart
-And a toast notification confirms the action
-And if the product is out of stock, the button is disabled
+**AC2 — Stock status:**
+Then stock shows "In Stock" (green) / "Only X left" (amber, ≤5) / "Out of Stock" (red)
+And "Add to Cart" is disabled when out of stock
+And stock count is refreshed after add-to-cart via `useStockPolling`
 
-**AC3 — Stock polling:**
-Given I am on the product detail page
-When the page loads
-Then the current stock count is fetched
-And when I add to cart, the stock count is refreshed
+**AC3 — Add to cart:**
+Given I click "Add to Cart"
+Then the product is added to `cartSlice`
+And a success toast fires
+And stock is re-fetched from the server
 
-**AC4 — SEO meta tags:**
-Given the page renders
-When React Helmet processes the component
-Then `<title>` is set to `{product.name} | simple-ecommerce`
-And `<meta name="description">` is set to the first 160 characters of the description
+**AC4 — Related products:**
+Given the product has a category
+Then up to 4 products from the same category are shown below (excluding current product)
+
+**AC5 — Reviews:**
+Then all reviews for the product are displayed below the product info
+And if the user has a qualifying order, the ReviewForm is shown
+
+**AC6 — Mobile sticky bar:**
+On mobile, a sticky "Add to Cart" bar is fixed to the bottom of the screen
 
 ## Tasks
 
-- [x] `frontend/src/features/products/ProductDetailPage.tsx` — main page component
-- [x] `frontend/src/features/products/useStockPolling.ts` — stock polling hook
-- [x] `frontend/src/api/productsApi.ts` — `getProductByIdApi()` function
-- [x] `frontend/src/components/ui/StarRating.tsx` — star rating display component
+- [x] `frontend/src/features/products/ProductDetailPage.tsx`
+- [x] `frontend/src/features/products/useStockPolling.ts`
+- [x] `frontend/src/utils/cloudinaryImage.ts` — `cloudinaryFull()`, `cloudinaryThumb()`
+- [x] `frontend/src/components/ui/StarRating.tsx`
 
 ## Dev Notes
 
-### Architecture references
-- Stock polling: fetch on mount, refresh after add-to-cart action
-- React Helmet Async: set title and meta description dynamically
-- Image lazy loading: `loading="lazy"` attribute on `<img>` tags
-- Toast notifications: use `uiSlice` to show success/error messages
+### useStockPolling
+Not a timer — fetches on demand. Returns `{ stock, refreshing, refresh }`.
+`refresh()` is called after add-to-cart to get updated count from server.
+Initial stock seeded from already-loaded product to avoid extra request on mount.
 
-### Key files
-- `frontend/src/features/products/ProductDetailPage.tsx` — main component
-- `frontend/src/features/products/useStockPolling.ts` — custom hook for stock updates
-- `frontend/src/store/slices/cartSlice.ts` — `addToCart` action
+### Lightbox
+Keyboard: Escape closes, ArrowLeft/ArrowRight navigates.
+`document.body.style.overflow = 'hidden'` when open — restored on close.
+`role="dialog" aria-modal="true"` for accessibility.
+
+### Review eligibility check
+```ts
+getMyOrdersApi().then(res => {
+  const order = res.data.find(o =>
+    o.status !== 'cancelled' &&
+    o.items.some(item => item.productId === id)
+  )
+  if (order) setEligibleOrderId(order._id)
+})
+```
+Only runs when `isAuthenticated === true`.
+
+### Cloudinary transforms
+- Catalog thumbnail: `cloudinaryThumb(url, 400, 300)` → `w_400,h_300,c_fill,f_auto,q_auto`
+- Detail main image: `cloudinaryFull(url, 800)` → `w_800,c_limit,f_auto,q_auto`
+- Lightbox full: `cloudinaryFull(url, 1200)`
 
 ## Dev Agent Record
 
@@ -64,15 +82,16 @@ And `<meta name="description">` is set to the first 160 characters of the descri
 Claude (Kiro)
 
 ### Completion Notes
-- ✅ ProductDetailPage with full product info, images, rating, stock status
-- ✅ Add to cart button disabled when out of stock
-- ✅ Stock count refreshed after add-to-cart
-- ✅ React Helmet Async for SEO meta tags
-- ✅ StarRating component for visual rating display
-- ✅ Toast notification on add-to-cart success
+- ✅ Split layout: image gallery left, purchase panel right (sticky on desktop)
+- ✅ Lightbox with keyboard navigation and scroll lock
+- ✅ Breadcrumb navigation: Home / Category / Product
+- ✅ useStockPolling — on-demand refresh, not interval-based
+- ✅ Related products from same category (max 4, excludes self)
+- ✅ Mobile sticky Add to Cart bar with spacer div
+- ✅ React Helmet with OG tags
 
 ### File List
 - `frontend/src/features/products/ProductDetailPage.tsx`
 - `frontend/src/features/products/useStockPolling.ts`
-- `frontend/src/api/productsApi.ts`
+- `frontend/src/utils/cloudinaryImage.ts`
 - `frontend/src/components/ui/StarRating.tsx`

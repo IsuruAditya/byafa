@@ -12,40 +12,50 @@ so that I can review my order before paying.
 
 ## Acceptance Criteria
 
-**AC1 — Cart items display:**
-Given I navigate to the cart page
-When the page loads
+**AC1 — Cart items:**
+Given I navigate to `/cart`
 Then all cart items are displayed with image, name, price, and quantity controls
 And the order subtotal is calculated and displayed
 
-**AC2 — Empty cart:**
-Given my cart is empty
-When I navigate to the cart page
-Then a "Your cart is empty" message is shown
-And a link to the products page is displayed
+**AC2 — Empty state:**
+Given the cart is empty
+Then a message and a "Browse products" button are shown
 
-**AC3 — Proceed to checkout:**
-Given I have items in my cart
-When I click "Proceed to Checkout"
-Then if I am authenticated, I am taken to the checkout page
-And if I am not authenticated, I am redirected to the login page with a return URL
+**AC3 — Checkout CTA:**
+Given I click "Proceed to Checkout"
+And I am not authenticated
+Then I am redirected to `/login` with `state: { from: { pathname: '/checkout' } }`
+And I am authenticated
+Then I am navigated to `/checkout`
 
 ## Tasks
 
-- [x] `frontend/src/features/cart/CartPage.tsx` — cart page component
-- [x] `frontend/src/features/cart/CartItemRow.tsx` — individual cart item row
+- [x] `frontend/src/features/cart/CartPage.tsx`
+- [x] `frontend/src/features/cart/CartItemRow.tsx`
 
 ## Dev Notes
 
-### Architecture references
-- Subtotal: `items.reduce((sum, item) => sum + item.price * item.quantity, 0)`
-- Auth check: use `isAuthenticated` from `authSlice` before navigating to checkout
-- Return URL: `navigate('/login?redirect=/checkout')` for unauthenticated users
+### Checkout redirect for unauthenticated users
+```ts
+function handleCheckout() {
+  if (!isAuthenticated) {
+    navigate('/login', { state: { from: { pathname: '/checkout' } } })
+  } else {
+    navigate('/checkout')
+  }
+}
+```
+`LoginPage` reads `location.state.from.pathname` and redirects back after login.
 
-### Key files
-- `frontend/src/features/cart/CartPage.tsx` — main cart view
-- `frontend/src/store/slices/cartSlice.ts` — cart state
-- `frontend/src/store/slices/authSlice.ts` — auth state for checkout guard
+### Subtotal calculation
+```ts
+const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+```
+Displayed with `formatCurrency(subtotal)`.
+
+### CartItemRow
+Renders as a `<li>` inside a `<ul aria-label="Cart items">` for accessibility.
+Quantity controls use `dispatch(updateQuantity(...))` directly.
 
 ## Dev Agent Record
 
@@ -53,10 +63,10 @@ And if I am not authenticated, I am redirected to the login page with a return U
 Claude (Kiro)
 
 ### Completion Notes
-- ✅ CartPage displays all items with CartItemRow components
-- ✅ Subtotal calculated and displayed
-- ✅ Empty cart state with link to products page
-- ✅ Checkout button redirects to login if not authenticated
+- ✅ CartPage with item list, subtotal, checkout CTA
+- ✅ Empty state with SVG cart icon and browse link
+- ✅ Unauthenticated redirect with `from` state
+- ✅ CartItemRow with image, name, price, quantity controls, remove
 
 ### File List
 - `frontend/src/features/cart/CartPage.tsx`

@@ -12,55 +12,59 @@ so that the frontend can display the product catalog.
 
 ## Acceptance Criteria
 
-**AC1 — Paginated product list:**
-Given products exist in the database
-When `GET /api/v1/products` is called
+**AC1 — List products:**
+Given `GET /api/v1/products` is called
 Then it returns `{ success: true, data: [...], pagination: { page, pageSize, total, totalPages } }`
-And default pagination is `page=1, pageSize=12`
+And `?search=keyword` filters by name + description (MongoDB `$text` search)
+And `?category=electronics` filters by category (case-insensitive)
+And `?sortBy=price_asc|price_desc|newest|popularity` sorts accordingly
+And `?page=1&pageSize=12` controls pagination (pageSize clamped to max 100)
 
-**AC2 — Search by keyword:**
-Given `?search=keyword` is provided
-When the request is processed
-Then products are filtered by name using MongoDB text search (case-insensitive)
+**AC2 — Single product:**
+Given `GET /api/v1/products/:id` is called with a valid ObjectId
+Then it returns `{ success: true, data: { product } }`
+And an invalid ObjectId or missing product returns 404
 
-**AC3 — Filter by category:**
-Given `?category=electronics` is provided
-When the request is processed
-Then only products with matching category are returned
-
-**AC4 — Sort options:**
-Given `?sortBy=price_asc|price_desc|newest|popularity` is provided
-When the request is processed
-Then results are sorted accordingly:
-- `price_asc`: price ascending
-- `price_desc`: price descending
-- `newest`: createdAt descending
-- `popularity`: ratings.count descending
-
-**AC5 — Get single product:**
-Given `GET /api/v1/products/:id` is called with a valid product ID
-When the request is processed
-Then the full product document is returned
-And if the product does not exist, status 404 is returned
+**AC3 — Input validation:**
+Given invalid query params (e.g. `page=abc`, `sortBy=invalid`)
+Then `{ success: false, message: "Validation failed", errors: [...] }` with status 400
 
 ## Tasks
 
-- [x] `backend/src/services/product.service.ts` — `getProducts()`, `getProductById()`
-- [x] `backend/src/api/controllers/product.controller.ts` — `getProducts()`, `getProductById()` handlers
-- [x] `backend/src/api/routes/product.routes.ts` — `GET /api/v1/products`, `GET /api/v1/products/:id`
+- [x] `backend/src/services/product.service.ts` — `getCatalog()`, `getProductById()`
+- [x] `backend/src/api/controllers/product.controller.ts` — `getCatalog()`, `getProductById()`
+- [x] `backend/src/api/routes/product.routes.ts` — `GET /`, `GET /:id` with express-validator
 
 ## Dev Notes
 
-### Architecture references
-- MongoDB text index on `name` field for search
-- Query builder pattern: start with base query, conditionally add filters
-- Pagination: `skip = (page - 1) * pageSize`, `limit = pageSize`
-- Total count: `Product.countDocuments(query)` for pagination metadata
+### Sort map
+```ts
+const SORT_MAP = {
+  price_asc:  { price: 1 },
+  price_desc: { price: -1 },
+  newest:     { createdAt: -1 },
+  popularity: { 'ratings.average': -1, 'ratings.count': -1 },
+}
+```
 
-### Key files
-- `backend/src/models/Product.model.ts` — text index on name
-- `backend/src/services/product.service.ts` — query logic
-- `backend/src/api/routes/product.routes.ts` — public routes (no auth required)
+### Pagination
+```ts
+const safePage = Math.max(1, page)
+const safePageSize = Math.min(Math.max(1, pageSize), 100)
+const skip = (safePage - 1) * safePageSize
+```
+
+### ObjectId validation
+```ts
+if (!id.match(/^[a-f\d]{24}$/i)) throw new AppError('Product not found', 404)
+```
+Prevents Mongoose CastError from reaching error middleware.
+
+### Text search filter
+```ts
+if (search?.trim()) filter.$text = { $search: search.trim() }
+```
+Requires the `{ name: 'text', description: 'text' }` index to exist.
 
 ## Dev Agent Record
 
@@ -68,11 +72,10 @@ And if the product does not exist, status 404 is returned
 Claude (Kiro)
 
 ### Completion Notes
-- ✅ `getProducts()` service with search, filter, sort, pagination
-- ✅ Text index on Product.name for efficient search
-- ✅ Pagination metadata calculated and returned
-- ✅ `getProductById()` returns 404 if not found
-- ✅ All routes public (no auth middleware)
+- ✅ `getCatalog()` — filter, sort, skip/limit, parallel count query
+- ✅ `getProductById()` — ObjectId regex validation before DB query
+- ✅ express-validator on query params, `validate` middleware
+- ✅ `.lean()` on list queries for performance
 
 ### File List
 - `backend/src/services/product.service.ts`

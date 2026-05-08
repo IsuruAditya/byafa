@@ -12,39 +12,58 @@ so that I can see when my order is being processed or shipped without refreshing
 
 ## Acceptance Criteria
 
-**AC1 — Polling behavior:**
-Given I am on the order detail page
-When the page is open
-Then `GET /api/v1/orders/:id/status` is polled every 60 seconds
-And the displayed status updates if the server returns a new status
-
-**AC2 — Cleanup on unmount:**
-Given I navigate away from the order detail page
-When the component unmounts
-Then the polling interval is cleared (no memory leaks)
-
-**AC3 — Status endpoint:**
+**AC1 — Polling endpoint:**
 Given `GET /api/v1/orders/:id/status` is called
-When the request is processed
-Then it returns `{ success: true, data: { status } }` with the current order status
+Then it returns `{ success: true, data: { status } }` — lightweight, no full order data
+
+**AC2 — Frontend polling:**
+Given I am on the order detail page
+Then `useOrderStatusPolling` polls every 60 seconds
+And if the returned status differs from current, `setOrder` is called to update the UI
+And polling stops when status is `delivered` or `cancelled` (terminal states)
+And polling stops when I navigate away (cleanup on unmount)
+
+**AC3 — No unnecessary polls:**
+Given the order is already in a terminal state when the page loads
+Then no polling interval is started
 
 ## Tasks
 
-- [x] `backend/src/api/routes/order.routes.ts` — `GET /api/v1/orders/:id/status`
-- [x] `backend/src/api/controllers/order.controller.ts` — `getOrderStatus()` handler
-- [x] `frontend/src/features/orders/useOrderStatusPolling.ts` — polling hook
+- [x] `backend/src/api/controllers/order.controller.ts` — `getMyOrderStatus()`
+- [x] `backend/src/api/routes/order.routes.ts` — `GET /:id/status`
+- [x] `frontend/src/features/orders/useOrderStatusPolling.ts`
 
 ## Dev Notes
 
-### Architecture references
-- Polling interval: `setInterval(fetchStatus, 60_000)` in `useEffect`
-- Cleanup: return `() => clearInterval(intervalId)` from useEffect
-- Status endpoint: lightweight query, only returns `{ status }` field
-- Update condition: only update local state if status has changed
+### useOrderStatusPolling
+```ts
+export function useOrderStatusPolling({ orderId, currentStatus, onStatusChange }) {
+  const statusRef = useRef(currentStatus)
+  useEffect(() => { statusRef.current = currentStatus }, [currentStatus])
 
-### Key files
-- `frontend/src/features/orders/useOrderStatusPolling.ts` — custom hook
-- `backend/src/api/routes/order.routes.ts` — status endpoint
+  const poll = useCallback(async () => {
+    const terminal = ['delivered', 'cancelled']
+    if (terminal.includes(statusRef.current)) return
+    const { data } = await axiosInstance.get(`/orders/${orderId}/status`)
+    if (data.data.status !== statusRef.current) onStatusChange(data.data.status)
+  }, [orderId, onStatusChange])
+
+  useEffect(() => {
+    const terminal = ['delivered', 'cancelled']
+    if (terminal.includes(currentStatus)) return
+    const interval = setInterval(() => void poll(), 60_000)
+    return () => clearInterval(interval)
+  }, [currentStatus, poll])
+}
+```
+
+### statusRef pattern
+`useRef` keeps the latest status accessible inside the interval callback without
+causing the interval to be recreated on every status change. This prevents the
+"stale closure" problem where the interval always sees the initial status value.
+
+### Polling interval: 60 seconds
+Per architecture decision. Admin dashboard polls every 30s (different hook).
 
 ## Dev Agent Record
 
@@ -52,12 +71,11 @@ Then it returns `{ success: true, data: { status } }` with the current order sta
 Claude (Kiro)
 
 ### Completion Notes
-- ✅ useOrderStatusPolling hook with 60s interval
-- ✅ Cleanup on unmount via useEffect return
-- ✅ Status-only endpoint for lightweight polling
-- ✅ Local state updated only when status changes
+- ✅ `GET /:id/status` — lightweight endpoint, ownership check via `getOrderById()`
+- ✅ `useOrderStatusPolling` — statusRef pattern, terminal state guard, cleanup on unmount
+- ✅ Used in `OrderDetailPage` — `onStatusChange` updates local order state
 
 ### File List
-- `backend/src/api/controllers/order.controller.ts`
+- `backend/src/api/controllers/order.controller.ts` (getMyOrderStatus)
 - `backend/src/api/routes/order.routes.ts`
 - `frontend/src/features/orders/useOrderStatusPolling.ts`
