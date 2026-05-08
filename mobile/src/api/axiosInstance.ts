@@ -1,10 +1,10 @@
 import axios from 'axios'
-import * as SecureStore from 'expo-secure-store'
+import { getItem, deleteItem } from '../utils/secureStorage'
 import { store } from '../store'
 import { updateAccessToken, logout } from '../store/slices/authSlice'
 
 const API_URL =
-  process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:5000/api/v1'
+  process.env.EXPO_PUBLIC_API_URL ?? 'https://byafa-be.onrender.com/api/v1'
 
 const axiosInstance = axios.create({
   baseURL: API_URL,
@@ -56,7 +56,7 @@ axiosInstance.interceptors.response.use(
     // Never retry the refresh endpoint itself — prevents infinite loop
     if (originalRequest.url?.includes('/auth/refresh')) {
       store.dispatch(logout())
-      await SecureStore.deleteItemAsync('refreshToken')
+      await deleteItem('refreshToken')
       return Promise.reject(error)
     }
 
@@ -77,7 +77,7 @@ axiosInstance.interceptors.response.use(
 
     try {
       // On mobile, refresh token is stored in SecureStore (not cookies)
-      const refreshToken = await SecureStore.getItemAsync('refreshToken')
+      const refreshToken = await getItem('refreshToken')
       if (!refreshToken) throw new Error('No refresh token')
 
       const { data } = await axiosInstance.post<{
@@ -92,7 +92,7 @@ axiosInstance.interceptors.response.use(
       return axiosInstance(originalRequest)
     } catch (refreshError) {
       processPendingQueue(refreshError, null)
-      await SecureStore.deleteItemAsync('refreshToken')
+      await deleteItem('refreshToken')
       store.dispatch(logout())
       return Promise.reject(refreshError)
     } finally {

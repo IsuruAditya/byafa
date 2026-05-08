@@ -9,6 +9,7 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@expo/metro-runtime": "~6.1.2",
     "@expo/vector-icons": "^15.1.1",
     "@hookform/resolvers": "^5.2.2",
     "@react-navigation/bottom-tabs": "^7.15.11",
@@ -22,12 +23,14 @@
     "expo-secure-store": "^55.0.13",
     "expo-status-bar": "~3.0.9",
     "react": "19.1.0",
+    "react-dom": "19.1.0",
     "react-hook-form": "^7.75.0",
     "react-native": "0.81.5",
     "react-native-gesture-handler": "^2.31.2",
     "react-native-reanimated": "^4.3.0",
     "react-native-safe-area-context": "^5.7.0",
     "react-native-screens": "^4.24.0",
+    "react-native-web": "^0.21.0",
     "react-redux": "^9.2.0",
     "zod": "^4.4.3"
   },

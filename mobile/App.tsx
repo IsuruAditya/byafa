@@ -4,7 +4,7 @@ import { NavigationContainer, DarkTheme, DefaultTheme } from '@react-navigation/
 import { Provider } from 'react-redux'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
-import * as SecureStore from 'expo-secure-store'
+import { getItem, deleteItem } from './src/utils/secureStorage'
 import { store } from './src/store'
 import { setCredentials, updateAccessToken, logout } from './src/store/slices/authSlice'
 import { RootNavigator } from './src/navigation/RootNavigator'
@@ -51,7 +51,7 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     async function init() {
       try {
-        const refreshToken = await SecureStore.getItemAsync('refreshToken')
+        const refreshToken = await getItem('refreshToken')
         if (!refreshToken) return
 
         // Exchange stored refresh token for a new access token
@@ -70,10 +70,10 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
           store.dispatch(setCredentials({ user: meRes.data.user, accessToken }))
         } else {
           store.dispatch(logout())
-          await SecureStore.deleteItemAsync('refreshToken')
+          await deleteItem('refreshToken')
         }
       } catch {
-        await SecureStore.deleteItemAsync('refreshToken')
+        await deleteItem('refreshToken')
         store.dispatch(logout())
       } finally {
         setIsReady(true)

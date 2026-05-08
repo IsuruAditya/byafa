@@ -12,7 +12,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import * as SecureStore from 'expo-secure-store'
+import { getItem, deleteItem } from '../../utils/secureStorage'
 import type { NativeStackScreenProps } from '@react-navigation/native-stack'
 import type { ProfileStackParamList } from '../../navigation/types'
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
@@ -101,10 +101,10 @@ export default function ProfileScreen({ navigation }: Props) {
 
   async function handleLogout() {
     try {
-      const refreshToken = await SecureStore.getItemAsync('refreshToken')
+      const refreshToken = await getItem('refreshToken')
       if (refreshToken) await logoutApi(refreshToken)
     } catch {}
-    await SecureStore.deleteItemAsync('refreshToken')
+    await deleteItem('refreshToken')
     dispatch(logout())
     dispatch(clearCart())
   }
@@ -122,7 +122,7 @@ export default function ProfileScreen({ navigation }: Props) {
             setIsDeleting(true)
             try {
               await deleteAccountApi()
-              await SecureStore.deleteItemAsync('refreshToken')
+              await deleteItem('refreshToken')
               dispatch(logout())
               dispatch(clearCart())
             } catch (err) {

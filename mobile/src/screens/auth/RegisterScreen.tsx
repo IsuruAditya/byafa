@@ -11,7 +11,7 @@ import {
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import * as SecureStore from 'expo-secure-store'
+import { setItem } from '../../utils/secureStorage'
 import { StatusBar } from 'expo-status-bar'
 import type { NativeStackScreenProps } from '@react-navigation/native-stack'
 import type { AuthStackParamList } from '../../navigation/types'
@@ -48,7 +48,7 @@ export default function RegisterScreen({ navigation }: Props) {
     try {
       const res = await registerApi(values)
       if (res.success && res.data) {
-        await SecureStore.setItemAsync('refreshToken', res.data.refreshToken)
+        await setItem('refreshToken', res.data.refreshToken)
         dispatch(setCredentials({ user: res.data.user, accessToken: res.data.accessToken }))
       }
     } catch (err) {
