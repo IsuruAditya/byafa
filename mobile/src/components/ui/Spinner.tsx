@@ -1,6 +1,6 @@
 import React from 'react'
 import { ActivityIndicator, View, StyleSheet } from 'react-native'
-import { colors } from '../../constants/theme'
+import { useTheme } from '../../hooks/useTheme'
 
 interface SpinnerProps {
   size?: 'small' | 'large'
@@ -8,19 +8,18 @@ interface SpinnerProps {
   fullScreen?: boolean
 }
 
-export function Spinner({
-  size = 'large',
-  color = colors.primary,
-  fullScreen = false,
-}: SpinnerProps) {
+export function Spinner({ size = 'large', color, fullScreen = false }: SpinnerProps) {
+  const { colors } = useTheme()
+  const spinnerColor = color ?? colors.primary
+
   if (fullScreen) {
     return (
-      <View style={styles.fullScreen}>
-        <ActivityIndicator size={size} color={color} />
+      <View style={[styles.fullScreen, { backgroundColor: 'transparent' }]}>
+        <ActivityIndicator size={size} color={spinnerColor} />
       </View>
     )
   }
-  return <ActivityIndicator size={size} color={color} />
+  return <ActivityIndicator size={size} color={spinnerColor} />
 }
 
 const styles = StyleSheet.create({

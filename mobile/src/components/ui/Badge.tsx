@@ -1,34 +1,46 @@
 import React from 'react'
 import { View, Text, StyleSheet } from 'react-native'
-import { colors, fontSize, radius, spacing } from '../../constants/theme'
+import { fontSize, radius, spacing } from '../../constants/theme'
+import { useTheme } from '../../hooks/useTheme'
 import type { OrderStatus } from '../../types/order.types'
-
-const STATUS_COLORS: Record<
-  OrderStatus,
-  { bg: string; text: string; border: string }
-> = {
-  pending: { bg: '#fffbeb', text: '#92400e', border: '#fde68a' },
-  processing: { bg: '#eff6ff', text: '#1e40af', border: '#bfdbfe' },
-  shipped: { bg: '#f5f3ff', text: '#5b21b6', border: '#ddd6fe' },
-  delivered: { bg: '#ecfdf5', text: '#065f46', border: '#a7f3d0' },
-  cancelled: { bg: '#fef2f2', text: '#991b1b', border: '#fecaca' },
-}
 
 interface StatusBadgeProps {
   status: OrderStatus
 }
 
 export function StatusBadge({ status }: StatusBadgeProps) {
-  const c = STATUS_COLORS[status]
+  const { colors } = useTheme()
+
+  const statusColors = {
+    pending:    colors.statusPending,
+    processing: colors.statusProcessing,
+    shipped:    colors.statusShipped,
+    delivered:  colors.statusDelivered,
+    cancelled:  colors.statusCancelled,
+  }
+
+  const c = statusColors[status]
+
+  const labels: Record<OrderStatus, string> = {
+    pending:    'Pending',
+    processing: 'Processing',
+    shipped:    'Shipped',
+    delivered:  'Delivered',
+    cancelled:  'Cancelled',
+  }
+
+  const icons: Record<OrderStatus, string> = {
+    pending:    '⏳',
+    processing: '⚙️',
+    shipped:    '🚚',
+    delivered:  '✅',
+    cancelled:  '✕',
+  }
+
   return (
-    <View
-      style={[
-        styles.badge,
-        { backgroundColor: c.bg, borderColor: c.border },
-      ]}
-    >
+    <View style={[styles.badge, { backgroundColor: c.bg, borderColor: c.border }]}>
       <Text style={[styles.text, { color: c.text }]}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
+        {icons[status]} {labels[status]}
       </Text>
     </View>
   )
@@ -39,11 +51,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: radius.full,
     paddingHorizontal: spacing.sm + 2,
-    paddingVertical: 3,
+    paddingVertical: 4,
     alignSelf: 'flex-start',
   },
   text: {
     fontSize: fontSize.xs,
     fontWeight: '600',
+    letterSpacing: 0.2,
   },
 })

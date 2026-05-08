@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { View, ActivityIndicator } from 'react-native'
-import { NavigationContainer } from '@react-navigation/native'
+import { View, ActivityIndicator, useColorScheme } from 'react-native'
+import { NavigationContainer, DarkTheme, DefaultTheme } from '@react-navigation/native'
 import { Provider } from 'react-redux'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
@@ -11,10 +11,42 @@ import { RootNavigator } from './src/navigation/RootNavigator'
 import { ToastContainer } from './src/components/ui/Toast'
 import { getMeApi } from './src/api/authApi'
 import axiosInstance from './src/api/axiosInstance'
-import { colors } from './src/constants/theme'
+import { lightColors, darkColors } from './src/constants/theme'
+
+// ── Custom nav themes ─────────────────────────────────────────────────────────
+
+const LightNavTheme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    background:  lightColors.background,
+    card:        lightColors.surface,
+    text:        lightColors.text,
+    border:      lightColors.border,
+    primary:     lightColors.primary,
+    notification: lightColors.primary,
+  },
+}
+
+const DarkNavTheme = {
+  ...DarkTheme,
+  colors: {
+    ...DarkTheme.colors,
+    background:  darkColors.background,
+    card:        darkColors.surface,
+    text:        darkColors.text,
+    border:      darkColors.border,
+    primary:     darkColors.primary,
+    notification: darkColors.primary,
+  },
+}
+
+// ── App initializer ───────────────────────────────────────────────────────────
 
 function AppInitializer({ children }: { children: React.ReactNode }) {
   const [isReady, setIsReady] = useState(false)
+  const scheme = useColorScheme()
+  const colors = scheme === 'dark' ? darkColors : lightColors
 
   useEffect(() => {
     async function init() {
@@ -28,30 +60,19 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
           data: { accessToken: string }
         }>('/auth/refresh', { refreshToken })
 
-        if (!data.success || !data.data.accessToken) return
+        if (!data.success || !data.data?.accessToken) return
 
         const accessToken = data.data.accessToken
-
-        // Temporarily inject the token into axios headers for the /me call
-        // (the interceptor reads from Redux, so we set it there first)
         store.dispatch(updateAccessToken(accessToken))
 
-        // Fetch the full user profile
         const meRes = await getMeApi()
         if (meRes.success && meRes.data) {
-          store.dispatch(
-            setCredentials({
-              user: meRes.data.user,
-              accessToken,
-            })
-          )
+          store.dispatch(setCredentials({ user: meRes.data.user, accessToken }))
         } else {
-          // /me failed — clear the partial state
           store.dispatch(logout())
           await SecureStore.deleteItemAsync('refreshToken')
         }
       } catch {
-        // Refresh failed — clear stored token, user stays logged out
         await SecureStore.deleteItemAsync('refreshToken')
         store.dispatch(logout())
       } finally {
@@ -64,14 +85,7 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
 
   if (!isReady) {
     return (
-      <View
-        style={{
-          flex: 1,
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: colors.background,
-        }}
-      >
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background }}>
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
     )
@@ -80,12 +94,16 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
+// ── Root ──────────────────────────────────────────────────────────────────────
+
 export default function App() {
+  const scheme = useColorScheme()
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Provider store={store}>
         <SafeAreaProvider>
-          <NavigationContainer>
+          <NavigationContainer theme={scheme === 'dark' ? DarkNavTheme : LightNavTheme}>
             <AppInitializer>
               <RootNavigator />
               <ToastContainer />

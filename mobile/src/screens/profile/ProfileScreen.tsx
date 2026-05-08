@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import { Ionicons } from '@expo/vector-icons'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -21,28 +22,52 @@ import { addToast } from '../../store/slices/uiSlice'
 import { updateProfileApi, deleteAccountApi, logoutApi } from '../../api/authApi'
 import { Input } from '../../components/ui/Input'
 import { Button } from '../../components/ui/Button'
-import { colors, spacing, fontSize, fontWeight, radius } from '../../constants/theme'
+import { spacing, fontSize, fontWeight, radius } from '../../constants/theme'
+import { useTheme } from '../../hooks/useTheme'
 import axios from 'axios'
 
 const schema = z.object({
-  name: z.string().min(1, 'Name is required'),
+  name:  z.string().min(1, 'Name is required'),
   email: z.string().email('Enter a valid email'),
 })
-
 type FormValues = z.infer<typeof schema>
 type Props = NativeStackScreenProps<ProfileStackParamList, 'Profile'>
 
+// ── Unauthenticated view ──────────────────────────────────────────────────────
+
+function GuestProfile() {
+  const { colors } = useTheme()
+
+  // The app's RootNavigator already handles auth state — if user is not
+  // authenticated, they see AuthNavigator. This component only renders
+  // when the user is browsing without being logged in (which shouldn't
+  // happen in this app since RootNavigator gates it). Kept as a safety net.
+  return (
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['bottom']}>
+      <View style={styles.guestContainer}>
+        <View style={[styles.guestIcon, { backgroundColor: colors.primaryLight }]}>
+          <Ionicons name="person-outline" size={48} color={colors.primary} />
+        </View>
+        <Text style={[styles.guestTitle, { color: colors.text }]}>Your profile</Text>
+        <Text style={[styles.guestText, { color: colors.textSecondary }]}>
+          Sign in to manage your profile, view orders, and more.
+        </Text>
+      </View>
+    </SafeAreaView>
+  )
+}
+
+// ── Authenticated view ────────────────────────────────────────────────────────
+
 export default function ProfileScreen({ navigation }: Props) {
+  const { colors } = useTheme()
   const dispatch = useAppDispatch()
-  const { user, accessToken } = useAppSelector((s) => s.auth)
+  const { user, accessToken, isAuthenticated } = useAppSelector((s) => s.auth)
   const [isDeleting, setIsDeleting] = useState(false)
 
   const {
-    control,
-    handleSubmit,
-    reset,
-    setError,
-    formState: { errors, isSubmitting, isDirty, isSubmitSuccessful },
+    control, handleSubmit, reset, setError,
+    formState: { errors, isSubmitting, isDirty },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { name: user?.name ?? '', email: user?.email ?? '' },
@@ -52,25 +77,24 @@ export default function ProfileScreen({ navigation }: Props) {
     if (user) reset({ name: user.name, email: user.email })
   }, [user, reset])
 
+  // Show guest view if not authenticated
+  if (!isAuthenticated || !user) {
+    return <GuestProfile />
+  }
+
   async function onSubmit(values: FormValues) {
     try {
       const res = await updateProfileApi({ name: values.name, email: values.email })
       if (res.success && res.data) {
-        dispatch(
-          setCredentials({ user: res.data.user, accessToken: accessToken ?? '' })
-        )
+        dispatch(setCredentials({ user: res.data.user, accessToken: accessToken ?? '' }))
         reset({ name: res.data.user.name, email: res.data.user.email })
         dispatch(addToast({ message: 'Profile updated', type: 'success' }))
       }
     } catch (err) {
       if (axios.isAxiosError(err)) {
-        const message: string =
-          err.response?.data?.message ?? 'Update failed. Please try again.'
-        if (err.response?.status === 409) {
-          setError('email', { message })
-        } else {
-          setError('root', { message })
-        }
+        const msg: string = err.response?.data?.message ?? 'Update failed.'
+        if (err.response?.status === 409) setError('email', { message: msg })
+        else setError('root', { message: msg })
       }
     }
   }
@@ -85,10 +109,10 @@ export default function ProfileScreen({ navigation }: Props) {
     dispatch(clearCart())
   }
 
-  function confirmDeleteAccount() {
+  function confirmDelete() {
     Alert.alert(
       'Delete account',
-      'Are you sure you want to permanently delete your account? This cannot be undone.',
+      'This will permanently delete your account and all data. This cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -103,13 +127,10 @@ export default function ProfileScreen({ navigation }: Props) {
               dispatch(clearCart())
             } catch (err) {
               if (axios.isAxiosError(err)) {
-                dispatch(
-                  addToast({
-                    message:
-                      err.response?.data?.message ?? 'Failed to delete account.',
-                    type: 'error',
-                  })
-                )
+                dispatch(addToast({
+                  message: err.response?.data?.message ?? 'Failed to delete account.',
+                  type: 'error',
+                }))
               }
             } finally {
               setIsDeleting(false)
@@ -120,30 +141,39 @@ export default function ProfileScreen({ navigation }: Props) {
     )
   }
 
+  const MENU_ITEMS = [
+    {
+      icon: 'lock-closed-outline' as const,
+      label: 'Change password',
+      onPress: () => navigation.navigate('ChangePassword'),
+    },
+  ]
+
   return (
-    <SafeAreaView style={styles.safe} edges={['bottom']}>
-      <ScrollView contentContainerStyle={styles.container}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['bottom']}>
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+
         {/* Avatar card */}
-        <View style={styles.avatarCard}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
-              {user?.name?.charAt(0).toUpperCase() ?? '?'}
+        <View style={[styles.avatarCard, { backgroundColor: colors.primary }]}>
+          <View style={styles.avatarCircle}>
+            <Text style={styles.avatarLetter}>
+              {user.name.charAt(0).toUpperCase()}
             </Text>
           </View>
           <View style={styles.avatarInfo}>
-            <Text style={styles.avatarName}>{user?.name}</Text>
-            <Text style={styles.avatarEmail}>{user?.email}</Text>
-            {user?.role === 'admin' && (
+            <Text style={styles.avatarName}>{user.name}</Text>
+            <Text style={styles.avatarEmail}>{user.email}</Text>
+            {user.role === 'admin' && (
               <View style={styles.adminBadge}>
-                <Text style={styles.adminBadgeText}>Admin</Text>
+                <Text style={styles.adminBadgeText}>⚙️ Admin</Text>
               </View>
             )}
           </View>
         </View>
 
-        {/* Edit form */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Edit profile</Text>
+        {/* Edit profile */}
+        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Text style={[styles.cardTitle, { color: colors.text }]}>Edit profile</Text>
 
           <Controller
             control={control}
@@ -152,6 +182,7 @@ export default function ProfileScreen({ navigation }: Props) {
               <Input
                 label="Full name"
                 autoComplete="name"
+                autoCapitalize="words"
                 onChangeText={onChange}
                 onBlur={onBlur}
                 value={value}
@@ -165,7 +196,7 @@ export default function ProfileScreen({ navigation }: Props) {
             name="email"
             render={({ field: { onChange, onBlur, value } }) => (
               <Input
-                label="Email"
+                label="Email address"
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoComplete="email"
@@ -178,14 +209,8 @@ export default function ProfileScreen({ navigation }: Props) {
           />
 
           {errors.root && (
-            <View style={styles.errorBox}>
-              <Text style={styles.errorText}>{errors.root.message}</Text>
-            </View>
-          )}
-
-          {isSubmitSuccessful && !isDirty && (
-            <View style={styles.successBox}>
-              <Text style={styles.successText}>Profile updated successfully.</Text>
+            <View style={[styles.errorBox, { backgroundColor: colors.errorBg, borderColor: colors.errorBorder }]}>
+              <Text style={[styles.errorText, { color: colors.error }]}>{errors.root.message}</Text>
             </View>
           )}
 
@@ -199,16 +224,23 @@ export default function ProfileScreen({ navigation }: Props) {
           </Button>
         </View>
 
-        {/* Security */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Security</Text>
-          <TouchableOpacity
-            style={styles.menuItem}
-            onPress={() => navigation.navigate('ChangePassword')}
-          >
-            <Text style={styles.menuItemText}>Change password</Text>
-            <Text style={styles.menuItemArrow}>›</Text>
-          </TouchableOpacity>
+        {/* Account menu */}
+        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Text style={[styles.cardTitle, { color: colors.text }]}>Account</Text>
+          {MENU_ITEMS.map((item) => (
+            <TouchableOpacity
+              key={item.label}
+              style={styles.menuItem}
+              onPress={item.onPress}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.menuIcon, { backgroundColor: colors.primaryLight }]}>
+                <Ionicons name={item.icon} size={18} color={colors.primary} />
+              </View>
+              <Text style={[styles.menuLabel, { color: colors.text }]}>{item.label}</Text>
+              <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+            </TouchableOpacity>
+          ))}
         </View>
 
         {/* Sign out */}
@@ -217,18 +249,12 @@ export default function ProfileScreen({ navigation }: Props) {
         </Button>
 
         {/* Danger zone */}
-        <View style={styles.dangerCard}>
-          <Text style={styles.dangerLabel}>Danger zone</Text>
-          <Text style={styles.dangerText}>
-            Permanently delete your account and all associated data. This cannot
-            be undone.
+        <View style={[styles.dangerCard, { backgroundColor: colors.surface, borderColor: colors.errorBorder }]}>
+          <Text style={[styles.dangerLabel, { color: colors.error }]}>Danger zone</Text>
+          <Text style={[styles.dangerText, { color: colors.textSecondary }]}>
+            Permanently delete your account and all associated data. This cannot be undone.
           </Text>
-          <Button
-            onPress={confirmDeleteAccount}
-            variant="danger"
-            size="sm"
-            isLoading={isDeleting}
-          >
+          <Button onPress={confirmDelete} variant="danger" size="sm" isLoading={isDeleting}>
             Delete account
           </Button>
         </View>
@@ -240,122 +266,90 @@ export default function ProfileScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
+  safe: { flex: 1 },
   container: { padding: spacing.md, gap: spacing.md },
 
+  // ── Guest state ──────────────────────────────────────────────────────────
+  guestContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.xl,
+    gap: spacing.md,
+  },
+  guestIcon: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.sm,
+  },
+  guestTitle: { fontSize: fontSize.xxl, fontWeight: fontWeight.bold, textAlign: 'center' },
+  guestText:  { fontSize: fontSize.base, textAlign: 'center', lineHeight: 22, maxWidth: 260 },
+
+  // ── Authenticated state ──────────────────────────────────────────────────
   avatarCard: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.xl,
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderRadius: radius.xxl,
     padding: spacing.lg,
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
   },
-  avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.primaryLight,
+  avatarCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: 'rgba(255,255,255,0.25)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarText: {
-    fontSize: fontSize.xl,
-    fontWeight: fontWeight.bold,
-    color: colors.primaryText,
-  },
-  avatarInfo: { flex: 1, gap: 2 },
-  avatarName: {
-    fontSize: fontSize.md,
-    fontWeight: fontWeight.semibold,
-    color: colors.text,
-  },
-  avatarEmail: {
-    fontSize: fontSize.sm,
-    color: colors.textSecondary,
-  },
+  avatarLetter: { fontSize: fontSize.xxl, fontWeight: fontWeight.bold, color: '#fff' },
+  avatarInfo:   { flex: 1, gap: 2 },
+  avatarName:   { fontSize: fontSize.lg, fontWeight: fontWeight.bold, color: '#fff' },
+  avatarEmail:  { fontSize: fontSize.sm, color: 'rgba(255,255,255,0.8)' },
   adminBadge: {
-    backgroundColor: colors.primaryLight,
+    backgroundColor: 'rgba(255,255,255,0.2)',
     borderRadius: radius.full,
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
     alignSelf: 'flex-start',
     marginTop: 4,
   },
-  adminBadgeText: {
-    fontSize: fontSize.xs,
-    fontWeight: fontWeight.semibold,
-    color: colors.primaryText,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
+  adminBadgeText: { fontSize: fontSize.xs, fontWeight: fontWeight.semibold, color: '#fff' },
 
   card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.xl,
+    borderRadius: radius.xxl,
     borderWidth: 1,
-    borderColor: colors.border,
     padding: spacing.lg,
     gap: spacing.md,
   },
-  cardTitle: {
-    fontSize: fontSize.md,
-    fontWeight: fontWeight.semibold,
-    color: colors.text,
-  },
+  cardTitle: { fontSize: fontSize.md, fontWeight: fontWeight.semibold },
 
-  errorBox: {
-    backgroundColor: colors.errorBg,
-    borderWidth: 1,
-    borderColor: colors.errorBorder,
-    borderRadius: radius.md,
-    padding: spacing.sm + 2,
-  },
-  errorText: { color: colors.error, fontSize: fontSize.sm },
-  successBox: {
-    backgroundColor: colors.successBg,
-    borderWidth: 1,
-    borderColor: colors.successBorder,
-    borderRadius: radius.md,
-    padding: spacing.sm + 2,
-  },
-  successText: { color: colors.success, fontSize: fontSize.sm },
+  errorBox: { borderWidth: 1, borderRadius: radius.md, padding: spacing.md },
+  errorText: { fontSize: fontSize.sm },
 
   menuItem: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    gap: spacing.md,
     paddingVertical: spacing.sm,
   },
-  menuItemText: {
-    fontSize: fontSize.base,
-    color: colors.text,
+  menuIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  menuItemArrow: {
-    fontSize: fontSize.xl,
-    color: colors.textMuted,
-  },
+  menuLabel: { flex: 1, fontSize: fontSize.base },
 
   dangerCard: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.xl,
+    borderRadius: radius.xxl,
     borderWidth: 1,
-    borderColor: colors.errorBorder,
     padding: spacing.lg,
     gap: spacing.sm,
   },
-  dangerLabel: {
-    fontSize: fontSize.xs,
-    fontWeight: fontWeight.semibold,
-    color: colors.error,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  dangerText: {
-    fontSize: fontSize.sm,
-    color: colors.textSecondary,
-    lineHeight: 20,
-  },
+  dangerLabel: { fontSize: fontSize.xs, fontWeight: fontWeight.bold, textTransform: 'uppercase', letterSpacing: 0.5 },
+  dangerText:  { fontSize: fontSize.sm, lineHeight: 20 },
 })

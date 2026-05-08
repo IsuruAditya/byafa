@@ -4,7 +4,8 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { Ionicons } from '@expo/vector-icons'
 import { useAppSelector } from '../store/hooks'
-import { colors, fontSize } from '../constants/theme'
+import { useTheme } from '../hooks/useTheme'
+import { fontSize, fontWeight } from '../constants/theme'
 
 import type {
   MainTabParamList,
@@ -15,7 +16,6 @@ import type {
   ProfileStackParamList,
 } from './types'
 
-// Screens
 import HomeScreen from '../screens/home/HomeScreen'
 import ProductsScreen from '../screens/products/ProductsScreen'
 import ProductDetailScreen from '../screens/products/ProductDetailScreen'
@@ -33,9 +33,17 @@ const Tab = createBottomTabNavigator<MainTabParamList>()
 
 const HomeStack = createNativeStackNavigator<HomeStackParamList>()
 function HomeStackNavigator() {
+  const { colors } = useTheme()
   return (
-    <HomeStack.Navigator>
-      <HomeStack.Screen name="Home" component={HomeScreen} options={{ title: 'Byafa' }} />
+    <HomeStack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: colors.surface },
+        headerTintColor: colors.text,
+        headerShadowVisible: false,
+        headerTitleStyle: { fontWeight: fontWeight.semibold, fontSize: fontSize.md },
+      }}
+    >
+      <HomeStack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
       <HomeStack.Screen name="ProductDetail" component={ProductDetailScreen} options={{ title: '' }} />
     </HomeStack.Navigator>
   )
@@ -43,9 +51,17 @@ function HomeStackNavigator() {
 
 const ProductsStack = createNativeStackNavigator<ProductsStackParamList>()
 function ProductsStackNavigator() {
+  const { colors } = useTheme()
   return (
-    <ProductsStack.Navigator>
-      <ProductsStack.Screen name="Products" component={ProductsScreen} options={{ title: 'Shop' }} />
+    <ProductsStack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: colors.surface },
+        headerTintColor: colors.text,
+        headerShadowVisible: false,
+        headerTitleStyle: { fontWeight: fontWeight.semibold, fontSize: fontSize.md },
+      }}
+    >
+      <ProductsStack.Screen name="Products" component={ProductsScreen} options={{ headerShown: false }} />
       <ProductsStack.Screen name="ProductDetail" component={ProductDetailScreen} options={{ title: '' }} />
     </ProductsStack.Navigator>
   )
@@ -53,30 +69,58 @@ function ProductsStackNavigator() {
 
 const CartStack = createNativeStackNavigator<CartStackParamList>()
 function CartStackNavigator() {
+  const { colors } = useTheme()
   return (
-    <CartStack.Navigator>
+    <CartStack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: colors.surface },
+        headerTintColor: colors.text,
+        headerShadowVisible: false,
+        headerTitleStyle: { fontWeight: fontWeight.semibold, fontSize: fontSize.md },
+      }}
+    >
       <CartStack.Screen name="Cart" component={CartScreen} options={{ title: 'My Cart' }} />
       <CartStack.Screen name="Checkout" component={CheckoutScreen} options={{ title: 'Checkout' }} />
-      <CartStack.Screen name="CheckoutComplete" component={CheckoutCompleteScreen} options={{ title: 'Order Confirmed', headerLeft: () => null }} />
+      <CartStack.Screen
+        name="CheckoutComplete"
+        component={CheckoutCompleteScreen}
+        options={{ title: 'Order Confirmed', headerLeft: () => null }}
+      />
     </CartStack.Navigator>
   )
 }
 
 const OrdersStack = createNativeStackNavigator<OrdersStackParamList>()
 function OrdersStackNavigator() {
+  const { colors } = useTheme()
   return (
-    <OrdersStack.Navigator>
+    <OrdersStack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: colors.surface },
+        headerTintColor: colors.text,
+        headerShadowVisible: false,
+        headerTitleStyle: { fontWeight: fontWeight.semibold, fontSize: fontSize.md },
+      }}
+    >
       <OrdersStack.Screen name="OrderHistory" component={OrderHistoryScreen} options={{ title: 'My Orders' }} />
-      <OrdersStack.Screen name="OrderDetail" component={OrderDetailScreen} options={{ title: 'Order Detail' }} />
+      <OrdersStack.Screen name="OrderDetail" component={OrderDetailScreen} options={{ title: 'Order Details' }} />
     </OrdersStack.Navigator>
   )
 }
 
 const ProfileStack = createNativeStackNavigator<ProfileStackParamList>()
 function ProfileStackNavigator() {
+  const { colors } = useTheme()
   return (
-    <ProfileStack.Navigator>
-      <ProfileStack.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profile' }} />
+    <ProfileStack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: colors.surface },
+        headerTintColor: colors.text,
+        headerShadowVisible: false,
+        headerTitleStyle: { fontWeight: fontWeight.semibold, fontSize: fontSize.md },
+      }}
+    >
+      <ProfileStack.Screen name="Profile" component={ProfileScreen} options={{ title: 'My Profile' }} />
       <ProfileStack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: 'Change Password' }} />
     </ProfileStack.Navigator>
   )
@@ -103,6 +147,8 @@ function CartTabIcon({ color, size }: { color: string; size: number }) {
 // ── Main tab navigator ────────────────────────────────────────────────────────
 
 export function MainNavigator() {
+  const { colors } = useTheme()
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -110,12 +156,15 @@ export function MainNavigator() {
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: {
-          borderTopColor: colors.border,
-          backgroundColor: colors.surface,
+          borderTopColor: colors.tabBarBorder,
+          backgroundColor: colors.tabBar,
+          paddingBottom: 4,
+          height: 60,
         },
         tabBarLabelStyle: {
           fontSize: fontSize.xs,
-          fontWeight: '500',
+          fontWeight: fontWeight.medium,
+          marginBottom: 2,
         },
       }}
     >
@@ -124,8 +173,8 @@ export function MainNavigator() {
         component={HomeStackNavigator}
         options={{
           tabBarLabel: 'Home',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home-outline" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'home' : 'home-outline'} size={size} color={color} />
           ),
         }}
       />
@@ -134,8 +183,8 @@ export function MainNavigator() {
         component={ProductsStackNavigator}
         options={{
           tabBarLabel: 'Shop',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="grid-outline" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'grid' : 'grid-outline'} size={size} color={color} />
           ),
         }}
       />
@@ -144,9 +193,7 @@ export function MainNavigator() {
         component={CartStackNavigator}
         options={{
           tabBarLabel: 'Cart',
-          tabBarIcon: ({ color, size }) => (
-            <CartTabIcon color={color} size={size} />
-          ),
+          tabBarIcon: ({ color, size }) => <CartTabIcon color={color} size={size} />,
         }}
       />
       <Tab.Screen
@@ -154,8 +201,8 @@ export function MainNavigator() {
         component={OrdersStackNavigator}
         options={{
           tabBarLabel: 'Orders',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="receipt-outline" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'receipt' : 'receipt-outline'} size={size} color={color} />
           ),
         }}
       />
@@ -164,8 +211,8 @@ export function MainNavigator() {
         component={ProfileStackNavigator}
         options={{
           tabBarLabel: 'Profile',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-outline" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'person' : 'person-outline'} size={size} color={color} />
           ),
         }}
       />
@@ -178,7 +225,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -4,
     right: -8,
-    backgroundColor: colors.primary,
+    backgroundColor: '#dc2626',
     borderRadius: 9999,
     minWidth: 16,
     height: 16,

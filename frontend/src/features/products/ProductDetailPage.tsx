@@ -216,24 +216,24 @@ export default function ProductDetailPage() {
       )}
 
       {/* ── Breadcrumb ───────────────────────────────────────────────── */}
-      <nav className="mb-6 text-sm text-gray-500" aria-label="Breadcrumb">
+      <nav className="mb-6 text-sm text-gray-500 dark:text-gray-400" aria-label="Breadcrumb">
         <ol className="flex items-center gap-1.5 flex-wrap">
-          <li><Link to="/" className="hover:text-emerald-600 transition-colors">Home</Link></li>
+          <li><Link to="/" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Home</Link></li>
           <li aria-hidden="true">/</li>
-          <li><Link to="/products" className="hover:text-emerald-600 transition-colors">Products</Link></li>
+          <li><Link to="/products" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Products</Link></li>
           <li aria-hidden="true">/</li>
-          <li><Link to={`/products?category=${product.category}`} className="capitalize hover:text-emerald-600 transition-colors">{product.category}</Link></li>
+          <li><Link to={`/products?category=${product.category}`} className="capitalize hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">{product.category}</Link></li>
           <li aria-hidden="true">/</li>
-          <li className="text-gray-700 font-medium truncate max-w-[200px]">{product.name}</li>
+          <li className="text-gray-700 dark:text-gray-300 font-medium truncate max-w-[200px]">{product.name}</li>
         </ol>
       </nav>
 
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-2">
         {/* ── Images ─────────────────────────────────────────────────── */}
         <div className="space-y-3">
-          {/* Main image — click to open lightbox */}
+          {/* Main image */}
           <button
-            className="w-full overflow-hidden rounded-xl border border-gray-200 bg-gray-100 aspect-4/3 cursor-zoom-in relative group"
+            className="w-full overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 aspect-4/3 cursor-zoom-in relative group"
             onClick={() => setLightboxOpen(true)}
             aria-label="View full size image"
           >
@@ -275,11 +275,11 @@ export default function ProductDetailPage() {
           <div>
             <Link
               to={`/products?category=${product.category}`}
-              className="text-sm font-medium uppercase tracking-wide text-emerald-500 hover:text-emerald-600"
+              className="text-sm font-medium uppercase tracking-wide text-emerald-500 dark:text-emerald-400 hover:text-emerald-600 dark:hover:text-emerald-300"
             >
               {product.category}
             </Link>
-            <h1 className="mt-1 text-2xl font-bold text-gray-900 leading-snug">
+            <h1 className="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100 leading-snug">
               {product.name}
             </h1>
           </div>
@@ -288,28 +288,28 @@ export default function ProductDetailPage() {
           <StarRating average={product.ratings.average} count={product.ratings.count} size="md" />
 
           {/* Price */}
-          <p className="text-3xl font-bold text-gray-900">
+          <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
             {formatCurrency(product.price)}
           </p>
 
           {/* Stock status */}
           <div className="flex items-center gap-2 text-sm">
             {outOfStock ? (
-              <span className="inline-flex items-center gap-1.5 font-medium text-red-600">
+              <span className="inline-flex items-center gap-1.5 font-medium text-red-600 dark:text-red-400">
                 <span className="h-2 w-2 rounded-full bg-red-500" aria-hidden="true" />
                 Out of stock
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1.5 text-gray-600">
+              <span className="inline-flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
                 <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true" />
                 {refreshing ? (
                   <span className="inline-flex items-center gap-1"><Spinner size="sm" /> Checking…</span>
                 ) : stock <= 5 ? (
-                  <span className="font-semibold text-amber-600">Only {stock} left in stock — order soon</span>
+                  <span className="font-semibold text-amber-600 dark:text-amber-400">Only {stock} left in stock — order soon</span>
                 ) : (
                   <>
-                    <span className="font-medium text-emerald-700">In Stock</span>
-                    {cartQuantity > 0 && <span className="text-gray-400">({cartQuantity} in cart)</span>}
+                    <span className="font-medium text-emerald-700 dark:text-emerald-400">In Stock</span>
+                    {cartQuantity > 0 && <span className="text-gray-400 dark:text-gray-500">({cartQuantity} in cart)</span>}
                   </>
                 )}
               </span>
@@ -317,19 +317,19 @@ export default function ProductDetailPage() {
           </div>
 
           {/* Description */}
-          <p className="text-sm text-gray-600 leading-relaxed border-t border-gray-100 pt-4">
+          <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed border-t border-gray-100 dark:border-gray-700 pt-4">
             {product.description}
           </p>
 
-          {/* Add to cart / Out of stock */}
+          {/* Add to cart */}
           {outOfStock ? (
             <div className="space-y-3">
               <Button size="lg" className="w-full" disabled>
                 Out of stock
               </Button>
-              <p className="text-xs text-gray-500 text-center">
+              <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
                 💌 Want to be notified when this is back?{' '}
-                <a href="mailto:support@byafa.com?subject=Restock notification" className="text-emerald-600 hover:underline">
+                <a href="mailto:support@byafa.com?subject=Restock notification" className="text-emerald-600 dark:text-emerald-400 hover:underline">
                   Email us
                 </a>
               </p>
@@ -346,7 +346,7 @@ export default function ProductDetailPage() {
                 {!canAddMore ? 'Max quantity in cart' : 'Add to cart'}
               </Button>
               {!canAddMore && (
-                <p className="text-xs text-amber-600 text-center">
+                <p className="text-xs text-amber-600 dark:text-amber-400 text-center">
                   You have the maximum available quantity in your cart.
                 </p>
               )}
@@ -354,14 +354,14 @@ export default function ProductDetailPage() {
           )}
 
           {/* Trust signals */}
-          <div className="border-t border-gray-100 pt-4 space-y-2">
-            <p className="text-xs text-gray-500 flex items-center gap-2">
+          <div className="border-t border-gray-100 dark:border-gray-700 pt-4 space-y-2">
+            <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2">
               <span>🔒</span> Secure checkout via Stripe — card details never stored
             </p>
-            <p className="text-xs text-gray-500 flex items-center gap-2">
+            <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2">
               <span>📦</span> Real-time order tracking from your account
             </p>
-            <p className="text-xs text-gray-500 flex items-center gap-2">
+            <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2">
               <span>⭐</span> Reviews from verified purchasers only
             </p>
           </div>
@@ -372,10 +372,10 @@ export default function ProductDetailPage() {
       {relatedProducts.length > 0 && (
         <div className="mt-14">
           <div className="flex items-center justify-between mb-5">
-            <h2 className="text-xl font-bold text-gray-900">You might also like</h2>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">You might also like</h2>
             <Link
               to={`/products?category=${product.category}`}
-              className="text-sm font-medium text-emerald-600 hover:text-emerald-500 transition-colors"
+              className="text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 transition-colors"
             >
               View all {product.category} →
             </Link>
@@ -393,23 +393,23 @@ export default function ProductDetailPage() {
       {/* ── Reviews ──────────────────────────────────────────────────── */}
       <div className="mt-14 space-y-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-gray-900">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
             Customer reviews
             {reviews.length > 0 && (
-              <span className="ml-2 text-base font-normal text-gray-400">({reviews.length})</span>
+              <span className="ml-2 text-base font-normal text-gray-400 dark:text-gray-500">({reviews.length})</span>
             )}
           </h2>
           {product.ratings.count > 0 && (
             <div className="flex items-center gap-2">
-              <span className="text-2xl font-bold text-gray-900">{product.ratings.average.toFixed(1)}</span>
+              <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">{product.ratings.average.toFixed(1)}</span>
               <StarRating average={product.ratings.average} count={product.ratings.count} />
             </div>
           )}
         </div>
 
         {eligibleOrderId && (
-          <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-6 space-y-3">
-            <h3 className="text-sm font-semibold text-gray-900">✍️ Write a review</h3>
+          <div className="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20 p-6 space-y-3">
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">✍️ Write a review</h3>
             <ReviewForm
               productId={product._id}
               orderId={eligibleOrderId}
@@ -422,8 +422,8 @@ export default function ProductDetailPage() {
         )}
 
         {reviews.length === 0 ? (
-          <div className="rounded-xl border border-gray-200 bg-white p-8 text-center">
-            <p className="text-gray-500 text-sm">No reviews yet. Be the first to review this product!</p>
+          <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-8 text-center">
+            <p className="text-gray-500 dark:text-gray-400 text-sm">No reviews yet. Be the first to review this product!</p>
           </div>
         ) : (
           <ReviewList reviews={reviews} />
@@ -431,10 +431,10 @@ export default function ProductDetailPage() {
       </div>
 
       {/* ── Sticky mobile Add to Cart bar ────────────────────────────── */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 md:hidden bg-white border-t border-gray-200 px-4 py-3 flex items-center gap-3 shadow-lg">
+      <div className="fixed bottom-0 left-0 right-0 z-30 md:hidden bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 px-4 py-3 flex items-center gap-3 shadow-lg">
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-gray-900 truncate">{product.name}</p>
-          <p className="text-sm font-bold text-emerald-600">{formatCurrency(product.price)}</p>
+          <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{product.name}</p>
+          <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(product.price)}</p>
         </div>
         <Button
           size="md"

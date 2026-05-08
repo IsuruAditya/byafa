@@ -41,7 +41,7 @@ export function StarRating({ average, count, size = 'sm' }: StarRatingProps) {
           )
         })}
       </div>
-      <span className="text-xs text-gray-500">({count})</span>
+      <span className="text-xs text-gray-500 dark:text-gray-400">({count})</span>
     </div>
   )
 }

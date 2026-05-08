@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState, useCallback, useRef } from 'react'
 import {
   View,
   Text,
@@ -9,14 +9,17 @@ import {
   Image,
   ActivityIndicator,
   RefreshControl,
+  ScrollView,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
+import { StatusBar } from 'expo-status-bar'
 import type { NativeStackScreenProps } from '@react-navigation/native-stack'
 import type { ProductsStackParamList } from '../../navigation/types'
 import { getProductsApi } from '../../api/productsApi'
 import type { Product, SortOption } from '../../types/product.types'
-import { colors, spacing, fontSize, fontWeight, radius } from '../../constants/theme'
+import { spacing, fontSize, fontWeight, radius, shadows } from '../../constants/theme'
+import { useTheme } from '../../hooks/useTheme'
 import { formatCurrency } from '../../utils/formatCurrency'
 import { StarRating } from '../../components/ui/StarRating'
 import { Spinner } from '../../components/ui/Spinner'
@@ -24,60 +27,64 @@ import { Spinner } from '../../components/ui/Spinner'
 type Props = NativeStackScreenProps<ProductsStackParamList, 'Products'>
 
 const SORT_OPTIONS: { label: string; value: SortOption }[] = [
-  { label: 'Popular', value: 'popularity' },
-  { label: 'Newest', value: 'newest' },
-  { label: 'Price ↑', value: 'price_asc' },
-  { label: 'Price ↓', value: 'price_desc' },
+  { label: 'Popular',  value: 'popularity' },
+  { label: 'Newest',   value: 'newest' },
+  { label: 'Price ↑',  value: 'price_asc' },
+  { label: 'Price ↓',  value: 'price_desc' },
+]
+
+const CATEGORIES = [
+  { key: '',            label: 'All' },
+  { key: 'electronics', label: 'Electronics' },
+  { key: 'clothing',    label: 'Clothing' },
+  { key: 'home',        label: 'Home' },
+  { key: 'books',       label: 'Books' },
+  { key: 'sports',      label: 'Sports' },
 ]
 
 export default function ProductsScreen({ navigation }: Props) {
-  const [products, setProducts] = useState<Product[]>([])
-  const [loading, setLoading] = useState(true)
-  const [refreshing, setRefreshing] = useState(false)
+  const { colors, isDark } = useTheme()
+  const [products, setProducts]       = useState<Product[]>([])
+  const [loading, setLoading]         = useState(true)
+  const [refreshing, setRefreshing]   = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
-  const [search, setSearch] = useState('')
-  const [sortBy, setSortBy] = useState<SortOption>('popularity')
-  const [page, setPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
-  const [searchTimeout, setSearchTimeout] = useState<ReturnType<typeof setTimeout> | null>(null)
+  const [search, setSearch]           = useState('')
+  const [sortBy, setSortBy]           = useState<SortOption>('popularity')
+  const [category, setCategory]       = useState('')
+  const [page, setPage]               = useState(1)
+  const [totalPages, setTotalPages]   = useState(1)
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const fetchProducts = useCallback(
-    async (opts: { page?: number; reset?: boolean; searchVal?: string; sort?: SortOption }) => {
-      const { page: p = 1, reset = false, searchVal = search, sort = sortBy } = opts
+    async (opts: { page?: number; reset?: boolean; q?: string; sort?: SortOption; cat?: string }) => {
+      const { page: p = 1, reset = false, q = search, sort = sortBy, cat = category } = opts
       try {
         const res = await getProductsApi({
-          page: p,
-          pageSize: 12,
-          search: searchVal || undefined,
+          page: p, pageSize: 12,
+          search: q || undefined,
           sortBy: sort,
+          category: cat || undefined,
         })
-        if (reset) {
-          setProducts(res.data)
-        } else {
-          setProducts((prev) => [...prev, ...res.data])
-        }
+        setProducts((prev) => reset ? res.data : [...prev, ...res.data])
         setTotalPages(res.pagination.totalPages)
         setPage(p)
       } catch {}
     },
-    [search, sortBy]
+    [search, sortBy, category]
   )
 
   useEffect(() => {
     setLoading(true)
     fetchProducts({ page: 1, reset: true }).finally(() => setLoading(false))
-  }, [sortBy])
+  }, [sortBy, category])
 
-  function handleSearchChange(text: string) {
+  function handleSearch(text: string) {
     setSearch(text)
-    if (searchTimeout) clearTimeout(searchTimeout)
-    const t = setTimeout(() => {
+    if (searchTimer.current) clearTimeout(searchTimer.current)
+    searchTimer.current = setTimeout(() => {
       setLoading(true)
-      fetchProducts({ page: 1, reset: true, searchVal: text }).finally(() =>
-        setLoading(false)
-      )
+      fetchProducts({ page: 1, reset: true, q: text }).finally(() => setLoading(false))
     }, 400)
-    setSearchTimeout(t)
   }
 
   async function handleRefresh() {
@@ -94,47 +101,93 @@ export default function ProductsScreen({ navigation }: Props) {
   }
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      {/* Search bar */}
-      <View style={styles.searchRow}>
-        <View style={styles.searchBox}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+
+      {/* ── Header ── */}
+      <View style={[styles.header, { backgroundColor: colors.background }]}>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Shop</Text>
+
+        {/* Search */}
+        <View style={[styles.searchBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <Ionicons name="search-outline" size={18} color={colors.textMuted} />
           <TextInput
-            style={styles.searchInput}
-            placeholder="Search products..."
+            style={[styles.searchInput, { color: colors.text }]}
+            placeholder="Search products…"
             placeholderTextColor={colors.textMuted}
             value={search}
-            onChangeText={handleSearchChange}
+            onChangeText={handleSearch}
             returnKeyType="search"
           />
           {search.length > 0 && (
-            <TouchableOpacity onPress={() => handleSearchChange('')}>
+            <TouchableOpacity onPress={() => handleSearch('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
               <Ionicons name="close-circle" size={18} color={colors.textMuted} />
             </TouchableOpacity>
           )}
         </View>
-      </View>
 
-      {/* Sort chips */}
-      <View style={styles.sortRow}>
-        {SORT_OPTIONS.map((opt) => (
-          <TouchableOpacity
-            key={opt.value}
-            style={[styles.sortChip, sortBy === opt.value && styles.sortChipActive]}
-            onPress={() => setSortBy(opt.value)}
-          >
-            <Text
+        {/* Category chips */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.catList}
+        >
+          {CATEGORIES.map((cat) => (
+            <TouchableOpacity
+              key={cat.key}
               style={[
-                styles.sortChipText,
-                sortBy === opt.value && styles.sortChipTextActive,
+                styles.catChip,
+                {
+                  backgroundColor: category === cat.key ? colors.primary : colors.surface,
+                  borderColor: category === cat.key ? colors.primary : colors.border,
+                },
               ]}
+              onPress={() => setCategory(cat.key)}
             >
-              {opt.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
+              <Text
+                style={[
+                  styles.catText,
+                  { color: category === cat.key ? '#fff' : colors.textSecondary },
+                ]}
+              >
+                {cat.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        {/* Sort chips */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.sortList}
+        >
+          {SORT_OPTIONS.map((opt) => (
+            <TouchableOpacity
+              key={opt.value}
+              style={[
+                styles.sortChip,
+                {
+                  backgroundColor: sortBy === opt.value ? colors.primaryLight : 'transparent',
+                  borderColor: sortBy === opt.value ? colors.primary : colors.border,
+                },
+              ]}
+              onPress={() => setSortBy(opt.value)}
+            >
+              <Text
+                style={[
+                  styles.sortText,
+                  { color: sortBy === opt.value ? colors.primaryText : colors.textSecondary },
+                ]}
+              >
+                {opt.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
       </View>
 
+      {/* ── Product grid ── */}
       {loading ? (
         <Spinner fullScreen />
       ) : (
@@ -145,37 +198,37 @@ export default function ProductsScreen({ navigation }: Props) {
           contentContainerStyle={styles.list}
           columnWrapperStyle={styles.row}
           refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={handleRefresh}
-              tintColor={colors.primary}
-            />
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.primary} />
           }
           onEndReached={handleLoadMore}
-          onEndReachedThreshold={0.3}
+          onEndReachedThreshold={0.4}
           ListFooterComponent={
-            loadingMore ? (
-              <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.lg }} />
-            ) : null
+            loadingMore
+              ? <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.lg }} />
+              : null
           }
           ListEmptyComponent={
             <View style={styles.empty}>
               <Text style={styles.emptyIcon}>🔍</Text>
-              <Text style={styles.emptyTitle}>No products found</Text>
-              <Text style={styles.emptyText}>Try a different search or filter</Text>
+              <Text style={[styles.emptyTitle, { color: colors.text }]}>No products found</Text>
+              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+                Try a different search or filter
+              </Text>
             </View>
           }
           renderItem={({ item }) => (
             <TouchableOpacity
-              style={styles.card}
+              style={[
+                styles.card,
+                { backgroundColor: colors.surface, borderColor: colors.border },
+                shadows.sm,
+              ]}
               onPress={() => navigation.navigate('ProductDetail', { id: item._id })}
               activeOpacity={0.85}
             >
               <Image
-                source={{
-                  uri: item.images[0] ?? 'https://placehold.co/200x200?text=?',
-                }}
-                style={styles.cardImage}
+                source={{ uri: item.images[0] ?? 'https://placehold.co/200x200?text=?' }}
+                style={[styles.cardImage, { backgroundColor: colors.borderLight }]}
                 resizeMode="cover"
               />
               {item.stockQuantity === 0 && (
@@ -184,11 +237,13 @@ export default function ProductsScreen({ navigation }: Props) {
                 </View>
               )}
               <View style={styles.cardBody}>
-                <Text style={styles.cardName} numberOfLines={2}>
+                <Text style={[styles.cardName, { color: colors.text }]} numberOfLines={2}>
                   {item.name}
                 </Text>
-                <StarRating rating={item.ratings.average} size={12} />
-                <Text style={styles.cardPrice}>{formatCurrency(item.price)}</Text>
+                <StarRating rating={item.ratings.average} size={11} />
+                <Text style={[styles.cardPrice, { color: colors.primary }]}>
+                  {formatCurrency(item.price)}
+                </Text>
               </View>
             </TouchableOpacity>
           )}
@@ -199,120 +254,72 @@ export default function ProductsScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
+  safe: { flex: 1 },
 
-  searchRow: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+  header: { paddingBottom: spacing.sm, gap: spacing.sm },
+  headerTitle: {
+    fontSize: fontSize.xxl,
+    fontWeight: fontWeight.bold,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
   },
+
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderWidth: 1.5,
     borderRadius: radius.full,
     paddingHorizontal: spacing.md,
     gap: spacing.sm,
-    height: 44,
+    height: 46,
+    marginHorizontal: spacing.lg,
   },
-  searchInput: {
-    flex: 1,
-    fontSize: fontSize.base,
-    color: colors.text,
-  },
+  searchInput: { flex: 1, fontSize: fontSize.base },
 
-  sortRow: {
-    flexDirection: 'row',
+  catList: { paddingHorizontal: spacing.lg, gap: spacing.sm },
+  catChip: {
+    borderWidth: 1.5,
+    borderRadius: radius.full,
     paddingHorizontal: spacing.md,
-    paddingBottom: spacing.sm,
-    gap: spacing.sm,
+    paddingVertical: spacing.xs + 1,
   },
+  catText: { fontSize: fontSize.sm, fontWeight: fontWeight.medium },
+
+  sortList: { paddingHorizontal: spacing.lg, gap: spacing.sm },
   sortChip: {
     borderWidth: 1,
-    borderColor: colors.border,
     borderRadius: radius.full,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
-    backgroundColor: colors.surface,
   },
-  sortChipActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  sortChipText: {
-    fontSize: fontSize.xs,
-    fontWeight: fontWeight.medium,
-    color: colors.textSecondary,
-  },
-  sortChipTextActive: {
-    color: '#fff',
-  },
+  sortText: { fontSize: fontSize.xs, fontWeight: fontWeight.medium },
 
-  list: {
-    padding: spacing.md,
-    paddingTop: spacing.sm,
-  },
-  row: {
-    gap: spacing.md,
-    marginBottom: spacing.md,
-  },
+  list: { padding: spacing.md, paddingTop: spacing.sm },
+  row:  { gap: spacing.md, marginBottom: spacing.md },
+
   card: {
     flex: 1,
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
+    borderRadius: radius.xl,
     borderWidth: 1,
-    borderColor: colors.border,
     overflow: 'hidden',
   },
-  cardImage: {
-    width: '100%',
-    height: 150,
-    backgroundColor: colors.borderLight,
-  },
+  cardImage: { width: '100%', height: 160 },
   outOfStock: {
     position: 'absolute',
     top: spacing.sm,
     left: spacing.sm,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: 'rgba(0,0,0,0.65)',
     borderRadius: radius.sm,
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
   },
-  outOfStockText: {
-    color: '#fff',
-    fontSize: fontSize.xs,
-    fontWeight: fontWeight.medium,
-  },
-  cardBody: {
-    padding: spacing.sm + 2,
-    gap: 4,
-  },
-  cardName: {
-    fontSize: fontSize.sm,
-    fontWeight: fontWeight.medium,
-    color: colors.text,
-    lineHeight: 18,
-  },
-  cardPrice: {
-    fontSize: fontSize.base,
-    fontWeight: fontWeight.bold,
-    color: colors.primary,
-  },
+  outOfStockText: { color: '#fff', fontSize: fontSize.xs, fontWeight: fontWeight.medium },
+  cardBody: { padding: spacing.sm + 2, gap: 4 },
+  cardName:  { fontSize: fontSize.sm, fontWeight: fontWeight.medium, lineHeight: 18 },
+  cardPrice: { fontSize: fontSize.base, fontWeight: fontWeight.bold },
 
-  empty: {
-    alignItems: 'center',
-    paddingTop: spacing.xxl,
-    gap: spacing.sm,
-  },
-  emptyIcon: { fontSize: 48 },
-  emptyTitle: {
-    fontSize: fontSize.lg,
-    fontWeight: fontWeight.bold,
-    color: colors.text,
-  },
-  emptyText: {
-    fontSize: fontSize.sm,
-    color: colors.textSecondary,
-  },
+  empty: { alignItems: 'center', paddingTop: spacing.xxl, gap: spacing.sm },
+  emptyIcon:  { fontSize: 48 },
+  emptyTitle: { fontSize: fontSize.lg, fontWeight: fontWeight.bold },
+  emptyText:  { fontSize: fontSize.sm },
 })

@@ -18,13 +18,14 @@ import { addToast } from '../../store/slices/uiSlice'
 import { changePasswordApi } from '../../api/authApi'
 import { Input } from '../../components/ui/Input'
 import { Button } from '../../components/ui/Button'
-import { colors, spacing, fontSize, fontWeight, radius } from '../../constants/theme'
+import { spacing, fontSize, fontWeight, radius } from '../../constants/theme'
+import { useTheme } from '../../hooks/useTheme'
 import axios from 'axios'
 
 const schema = z
   .object({
     currentPassword: z.string().min(1, 'Current password is required'),
-    newPassword: z.string().min(8, 'New password must be at least 8 characters'),
+    newPassword:     z.string().min(8, 'New password must be at least 8 characters'),
     confirmPassword: z.string().min(1, 'Please confirm your new password'),
   })
   .refine((d) => d.newPassword === d.confirmPassword, {
@@ -36,6 +37,7 @@ type FormValues = z.infer<typeof schema>
 type Props = NativeStackScreenProps<ProfileStackParamList, 'ChangePassword'>
 
 export default function ChangePasswordScreen({ navigation }: Props) {
+  const { colors } = useTheme()
   const dispatch = useAppDispatch()
 
   const {
@@ -57,15 +59,14 @@ export default function ChangePasswordScreen({ navigation }: Props) {
       navigation.goBack()
     } catch (err) {
       if (axios.isAxiosError(err)) {
-        const message: string =
-          err.response?.data?.message ?? 'Failed to change password.'
+        const message: string = err.response?.data?.message ?? 'Failed to change password.'
         setError('root', { message })
       }
     }
   }
 
   return (
-    <SafeAreaView style={styles.safe} edges={['bottom']}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['bottom']}>
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -73,8 +74,13 @@ export default function ChangePasswordScreen({ navigation }: Props) {
         <ScrollView
           contentContainerStyle={styles.container}
           keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          <View style={styles.card}>
+          <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={[styles.hint, { color: colors.textSecondary }]}>
+              Choose a strong password with at least 8 characters.
+            </Text>
+
             <Controller
               control={control}
               name="currentPassword"
@@ -101,6 +107,7 @@ export default function ChangePasswordScreen({ navigation }: Props) {
                   onBlur={onBlur}
                   value={value}
                   error={errors.newPassword?.message}
+                  hint="At least 8 characters"
                 />
               )}
             />
@@ -112,6 +119,8 @@ export default function ChangePasswordScreen({ navigation }: Props) {
                 <Input
                   label="Confirm new password"
                   secureTextEntry
+                  returnKeyType="done"
+                  onSubmitEditing={handleSubmit(onSubmit)}
                   onChangeText={onChange}
                   onBlur={onBlur}
                   value={value}
@@ -121,8 +130,10 @@ export default function ChangePasswordScreen({ navigation }: Props) {
             />
 
             {errors.root && (
-              <View style={styles.errorBox}>
-                <Text style={styles.errorText}>{errors.root.message}</Text>
+              <View style={[styles.errorBox, { backgroundColor: colors.errorBg, borderColor: colors.errorBorder }]}>
+                <Text style={[styles.errorText, { color: colors.error }]}>
+                  {errors.root.message}
+                </Text>
               </View>
             )}
 
@@ -142,23 +153,16 @@ export default function ChangePasswordScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
-  flex: { flex: 1 },
+  safe:      { flex: 1 },
+  flex:      { flex: 1 },
   container: { padding: spacing.md },
   card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.xl,
+    borderRadius: radius.xxl,
     borderWidth: 1,
-    borderColor: colors.border,
     padding: spacing.lg,
     gap: spacing.md,
   },
-  errorBox: {
-    backgroundColor: colors.errorBg,
-    borderWidth: 1,
-    borderColor: colors.errorBorder,
-    borderRadius: radius.md,
-    padding: spacing.sm + 2,
-  },
-  errorText: { color: colors.error, fontSize: fontSize.sm },
+  hint:     { fontSize: fontSize.sm, lineHeight: 20 },
+  errorBox: { borderWidth: 1, borderRadius: radius.md, padding: spacing.md },
+  errorText: { fontSize: fontSize.sm },
 })

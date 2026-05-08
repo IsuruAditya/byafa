@@ -53,6 +53,13 @@ axiosInstance.interceptors.response.use(
       return Promise.reject(error)
     }
 
+    // Never retry the refresh endpoint itself — prevents infinite loop
+    if (originalRequest.url?.includes('/auth/refresh')) {
+      store.dispatch(logout())
+      await SecureStore.deleteItemAsync('refreshToken')
+      return Promise.reject(error)
+    }
+
     if (isRefreshing) {
       return new Promise((resolve, reject) => {
         pendingQueue.push({

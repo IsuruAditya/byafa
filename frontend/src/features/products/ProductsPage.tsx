@@ -95,11 +95,11 @@ export default function ProductsPage() {
       {/* Page header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
             {search ? `Results for "${search}"` : 'Products'}
           </h1>
           {pagination && !loading && (
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
               {pagination.total} product{pagination.total !== 1 ? 's' : ''} found
             </p>
           )}
@@ -107,20 +107,19 @@ export default function ProductsPage() {
         {search && (
           <button
             onClick={() => { setSearch(''); setPage(1) }}
-            className="text-sm text-emerald-600 hover:underline"
+            className="text-sm text-emerald-600 dark:text-emerald-400 hover:underline"
           >
             Clear search ×
           </button>
         )}
       </div>
 
-      {/* Filters bar — sort + category only, search is in navbar */}
+      {/* Filters bar */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        {/* Sort */}
         <select
           value={sortBy}
           onChange={(e) => handleSortChange(e.target.value as SortOption)}
-          className="rounded-md border border-gray-300 py-2 pl-3 pr-8 text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 w-full sm:w-auto"
+          className="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 py-2 pl-3 pr-8 text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 w-full sm:w-auto"
           aria-label="Sort products"
         >
           {SORT_OPTIONS.map((o) => (
@@ -142,7 +141,7 @@ export default function ProductsPage() {
               'rounded-full px-4 py-1.5 text-sm font-medium capitalize transition-colors',
               category === cat
                 ? 'bg-emerald-600 text-white'
-                : 'bg-white border border-gray-300 text-gray-600 hover:border-emerald-400 hover:text-emerald-600',
+                : 'bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-emerald-400 hover:text-emerald-600 dark:hover:border-emerald-500 dark:hover:text-emerald-400',
             ].join(' ')}
           >
             {cat}
@@ -154,24 +153,24 @@ export default function ProductsPage() {
       {loading ? (
         <ProductGridSkeleton count={12} />
       ) : error ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center">
-          <p className="text-sm text-red-600">{error}</p>
+        <div className="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-6 text-center">
+          <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
           <button
             onClick={() => void fetchProducts()}
-            className="mt-3 text-sm font-medium text-emerald-600 hover:underline"
+            className="mt-3 text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:underline"
           >
             Try again
           </button>
         </div>
       ) : products.length === 0 ? (
-        <div className="rounded-xl border border-gray-200 bg-white p-12 text-center">
-          <p className="text-gray-500">No products found.</p>
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-12 text-center">
+          <p className="text-gray-500 dark:text-gray-400">No products found.</p>
           <button
             onClick={() => {
               handleSearchChange('')
               handleCategoryChange('all')
             }}
-            className="mt-3 text-sm font-medium text-emerald-600 hover:underline"
+            className="mt-3 text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:underline"
           >
             Clear filters
           </button>

@@ -6,7 +6,10 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  TouchableOpacity,
 } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { Ionicons } from '@expo/vector-icons'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -20,48 +23,116 @@ import { createPaymentIntentApi } from '../../api/ordersApi'
 import type { ShippingAddress } from '../../types/order.types'
 import { Input } from '../../components/ui/Input'
 import { Button } from '../../components/ui/Button'
-import { colors, spacing, fontSize, fontWeight, radius } from '../../constants/theme'
+import { spacing, fontSize, fontWeight, radius } from '../../constants/theme'
+import { useTheme } from '../../hooks/useTheme'
 import { formatCurrency } from '../../utils/formatCurrency'
 import axios from 'axios'
 
-const STRIPE_KEY =
-  process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ''
+const STRIPE_KEY = process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ''
 
 const schema = z.object({
-  fullName: z.string().min(1, 'Full name is required'),
+  fullName:     z.string().min(1, 'Full name is required'),
   addressLine1: z.string().min(1, 'Address is required'),
   addressLine2: z.string().optional(),
-  city: z.string().min(1, 'City is required'),
-  state: z.string().min(1, 'State is required'),
-  postalCode: z.string().min(1, 'Postal code is required'),
-  country: z.string().min(1, 'Country is required'),
+  city:         z.string().min(1, 'City is required'),
+  state:        z.string().min(1, 'State is required'),
+  postalCode:   z.string().min(1, 'Postal code is required'),
+  country:      z.string().min(1, 'Country is required'),
 })
 
 type FormValues = z.infer<typeof schema>
 type Step = 'shipping' | 'payment'
-
 type Props = NativeStackScreenProps<CartStackParamList, 'Checkout'>
 
+// ── Step indicator ────────────────────────────────────────────────────────────
+
+function StepIndicator({ step, colors }: { step: Step; colors: ReturnType<typeof useTheme>['colors'] }) {
+  const steps: { key: Step; label: string }[] = [
+    { key: 'shipping', label: 'Shipping' },
+    { key: 'payment',  label: 'Payment' },
+  ]
+  const currentIdx = steps.findIndex((s) => s.key === step)
+
+  return (
+    <View style={stepStyles.row}>
+      {steps.map((s, i) => {
+        const done   = i < currentIdx
+        const active = i === currentIdx
+        return (
+          <React.Fragment key={s.key}>
+            <View style={stepStyles.item}>
+              <View
+                style={[
+                  stepStyles.circle,
+                  { borderColor: colors.border, backgroundColor: colors.surface },
+                  done   && { backgroundColor: colors.primary, borderColor: colors.primary },
+                  active && { borderColor: colors.primary },
+                ]}
+              >
+                {done ? (
+                  <Ionicons name="checkmark" size={14} color="#fff" />
+                ) : (
+                  <Text style={[stepStyles.num, { color: active ? colors.primary : colors.textMuted }]}>
+                    {i + 1}
+                  </Text>
+                )}
+              </View>
+              <Text style={[stepStyles.label, { color: active ? colors.text : colors.textMuted }]}>
+                {s.label}
+              </Text>
+            </View>
+            {i < steps.length - 1 && (
+              <View
+                style={[
+                  stepStyles.line,
+                  { backgroundColor: done ? colors.primary : colors.border },
+                ]}
+              />
+            )}
+          </React.Fragment>
+        )
+      })}
+    </View>
+  )
+}
+
+const stepStyles = StyleSheet.create({
+  row:    { flexDirection: 'row', alignItems: 'center', paddingVertical: spacing.sm },
+  item:   { alignItems: 'center', gap: 4 },
+  circle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  num:   { fontSize: fontSize.sm, fontWeight: fontWeight.bold },
+  label: { fontSize: fontSize.xs, fontWeight: fontWeight.medium },
+  line:  { flex: 1, height: 2, marginBottom: 18, marginHorizontal: spacing.sm },
+})
+
+// ── Checkout form ─────────────────────────────────────────────────────────────
+
 function CheckoutForm({ navigation }: Props) {
+  const { colors } = useTheme()
   const dispatch = useAppDispatch()
   const items = useAppSelector((s) => s.cart.items)
   const { initPaymentSheet, presentPaymentSheet } = useStripe()
 
-  const [step, setStep] = useState<Step>('shipping')
-  const [clientSecret, setClientSecret] = useState<string | null>(null)
-  const [totalAmount, setTotalAmount] = useState(0)
+  const [step, setStep]                     = useState<Step>('shipping')
+  const [clientSecret, setClientSecret]     = useState<string | null>(null)
+  const [totalAmount, setTotalAmount]       = useState(0)
   const [shippingAddress, setShippingAddress] = useState<ShippingAddress | null>(null)
   const [isCreatingIntent, setIsCreatingIntent] = useState(false)
   const [isProcessingPayment, setIsProcessingPayment] = useState(false)
-  const [intentError, setIntentError] = useState<string | null>(null)
+  const [intentError, setIntentError]       = useState<string | null>(null)
 
   const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0)
 
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<FormValues>({ resolver: zodResolver(schema) })
+  const { control, handleSubmit, formState: { errors } } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+  })
 
   async function onShippingSubmit(values: FormValues) {
     setIsCreatingIntent(true)
@@ -71,26 +142,23 @@ function CheckoutForm({ navigation }: Props) {
         items: items.map((i) => ({ productId: i.productId, quantity: i.quantity })),
         shippingAddress: values as ShippingAddress,
       })
-
       if (res.success && res.data) {
         const { clientSecret: cs, totalAmount: total } = res.data
         setClientSecret(cs)
         setTotalAmount(total)
         setShippingAddress(values as ShippingAddress)
-
         await initPaymentSheet({
           paymentIntentClientSecret: cs,
           merchantDisplayName: 'Byafa',
           style: 'automatic',
         })
-
         setStep('payment')
       }
     } catch (err) {
       if (axios.isAxiosError(err)) {
-        setIntentError(
-          err.response?.data?.message ?? 'Failed to initialise payment. Please try again.'
-        )
+        setIntentError(err.response?.data?.message ?? 'Failed to initialise payment.')
+      } else {
+        setIntentError('Network error. Please try again.')
       }
     } finally {
       setIsCreatingIntent(false)
@@ -107,7 +175,6 @@ function CheckoutForm({ navigation }: Props) {
       } else {
         dispatch(clearCart())
         dispatch(addToast({ message: 'Payment successful! Order confirmed.', type: 'success' }))
-        // Extract payment intent ID from client secret
         const paymentIntentId = clientSecret.split('_secret_')[0]
         navigation.replace('CheckoutComplete', { paymentIntentId })
       }
@@ -117,193 +184,106 @@ function CheckoutForm({ navigation }: Props) {
   }
 
   return (
-    <KeyboardAvoidingView
-      style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['bottom']}>
+      <KeyboardAvoidingView
+        style={[styles.flex, { backgroundColor: colors.background }]}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
       <ScrollView
         contentContainerStyle={styles.container}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
         {/* Step indicator */}
-        <View style={styles.steps}>
-          {(['shipping', 'payment'] as Step[]).map((s, i) => {
-            const isCompleted = s === 'shipping' && step === 'payment'
-            const isActive = step === s
-            return (
-              <React.Fragment key={s}>
-                <View style={styles.stepItem}>
-                  <View
-                    style={[
-                      styles.stepCircle,
-                      isCompleted && styles.stepCircleCompleted,
-                      isActive && styles.stepCircleActive,
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.stepNum,
-                        (isCompleted || isActive) && styles.stepNumActive,
-                      ]}
-                    >
-                      {isCompleted ? '✓' : i + 1}
-                    </Text>
-                  </View>
-                  <Text
-                    style={[
-                      styles.stepLabel,
-                      isActive && styles.stepLabelActive,
-                    ]}
-                  >
-                    {s.charAt(0).toUpperCase() + s.slice(1)}
-                  </Text>
-                </View>
-                {i < 1 && (
-                  <View
-                    style={[
-                      styles.stepLine,
-                      isCompleted && styles.stepLineCompleted,
-                    ]}
-                  />
-                )}
-              </React.Fragment>
-            )
-          })}
-        </View>
+        <StepIndicator step={step} colors={colors} />
 
         {/* Order summary */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Order summary</Text>
+        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Text style={[styles.cardTitle, { color: colors.text }]}>Order summary</Text>
           {items.map((item) => (
             <View key={item.productId} style={styles.summaryRow}>
-              <Text style={styles.summaryItem} numberOfLines={1}>
+              <Text style={[styles.summaryItem, { color: colors.textSecondary }]} numberOfLines={1}>
                 {item.name} × {item.quantity}
               </Text>
-              <Text style={styles.summaryPrice}>
+              <Text style={[styles.summaryPrice, { color: colors.text }]}>
                 {formatCurrency(item.price * item.quantity)}
               </Text>
             </View>
           ))}
-          <View style={styles.summaryTotal}>
-            <Text style={styles.summaryTotalLabel}>Total</Text>
-            <Text style={styles.summaryTotalValue}>
+          <View style={[styles.summaryTotal, { borderTopColor: colors.border }]}>
+            <Text style={[styles.summaryTotalLabel, { color: colors.text }]}>Total</Text>
+            <Text style={[styles.summaryTotalValue, { color: colors.text }]}>
               {formatCurrency(step === 'payment' ? totalAmount : subtotal)}
             </Text>
           </View>
         </View>
 
-        {/* Shipping form */}
+        {/* ── Shipping step ── */}
         {step === 'shipping' && (
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Shipping address</Text>
+          <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={[styles.cardTitle, { color: colors.text }]}>Shipping address</Text>
 
             {intentError && (
-              <View style={styles.errorBox}>
-                <Text style={styles.errorText}>{intentError}</Text>
+              <View style={[styles.errorBox, { backgroundColor: colors.errorBg, borderColor: colors.errorBorder }]}>
+                <Ionicons name="alert-circle-outline" size={16} color={colors.error} />
+                <Text style={[styles.errorText, { color: colors.error }]}>{intentError}</Text>
               </View>
             )}
 
-            <Controller
-              control={control}
-              name="fullName"
+            <Controller control={control} name="fullName"
               render={({ field: { onChange, onBlur, value } }) => (
-                <Input
-                  label="Full name"
-                  autoComplete="name"
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  value={value}
-                  error={errors.fullName?.message}
-                />
+                <Input label="Full name" autoComplete="name" autoCapitalize="words"
+                  onChangeText={onChange} onBlur={onBlur} value={value}
+                  error={errors.fullName?.message} />
               )}
             />
-            <Controller
-              control={control}
-              name="addressLine1"
+            <Controller control={control} name="addressLine1"
               render={({ field: { onChange, onBlur, value } }) => (
-                <Input
-                  label="Address line 1"
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  value={value}
-                  error={errors.addressLine1?.message}
-                />
+                <Input label="Address line 1"
+                  onChangeText={onChange} onBlur={onBlur} value={value}
+                  error={errors.addressLine1?.message} />
               )}
             />
-            <Controller
-              control={control}
-              name="addressLine2"
+            <Controller control={control} name="addressLine2"
               render={({ field: { onChange, onBlur, value } }) => (
-                <Input
-                  label="Address line 2 (optional)"
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  value={value ?? ''}
-                  error={errors.addressLine2?.message}
-                />
+                <Input label="Address line 2 (optional)"
+                  onChangeText={onChange} onBlur={onBlur} value={value ?? ''}
+                  error={errors.addressLine2?.message} />
               )}
             />
             <View style={styles.row2}>
               <View style={styles.half}>
-                <Controller
-                  control={control}
-                  name="city"
+                <Controller control={control} name="city"
                   render={({ field: { onChange, onBlur, value } }) => (
-                    <Input
-                      label="City"
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      value={value}
-                      error={errors.city?.message}
-                    />
+                    <Input label="City" onChangeText={onChange} onBlur={onBlur} value={value}
+                      error={errors.city?.message} />
                   )}
                 />
               </View>
               <View style={styles.half}>
-                <Controller
-                  control={control}
-                  name="state"
+                <Controller control={control} name="state"
                   render={({ field: { onChange, onBlur, value } }) => (
-                    <Input
-                      label="State"
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      value={value}
-                      error={errors.state?.message}
-                    />
+                    <Input label="State" onChangeText={onChange} onBlur={onBlur} value={value}
+                      error={errors.state?.message} />
                   )}
                 />
               </View>
             </View>
             <View style={styles.row2}>
               <View style={styles.half}>
-                <Controller
-                  control={control}
-                  name="postalCode"
+                <Controller control={control} name="postalCode"
                   render={({ field: { onChange, onBlur, value } }) => (
-                    <Input
-                      label="Postal code"
-                      keyboardType="numeric"
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      value={value}
-                      error={errors.postalCode?.message}
-                    />
+                    <Input label="Postal code" keyboardType="numeric"
+                      onChangeText={onChange} onBlur={onBlur} value={value}
+                      error={errors.postalCode?.message} />
                   )}
                 />
               </View>
               <View style={styles.half}>
-                <Controller
-                  control={control}
-                  name="country"
+                <Controller control={control} name="country"
                   render={({ field: { onChange, onBlur, value } }) => (
-                    <Input
-                      label="Country"
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      value={value}
-                      error={errors.country?.message}
-                    />
+                    <Input label="Country" onChangeText={onChange} onBlur={onBlur} value={value}
+                      error={errors.country?.message} />
                   )}
                 />
               </View>
@@ -314,33 +294,54 @@ function CheckoutForm({ navigation }: Props) {
               isLoading={isCreatingIntent}
               fullWidth
               size="lg"
+              rightIcon={<Ionicons name="arrow-forward" size={18} color="#fff" />}
             >
               Continue to payment
             </Button>
           </View>
         )}
 
-        {/* Payment step */}
+        {/* ── Payment step ── */}
         {step === 'payment' && shippingAddress && (
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Payment</Text>
+          <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={[styles.cardTitle, { color: colors.text }]}>Payment</Text>
 
             {/* Shipping summary */}
-            <View style={styles.shippingSummary}>
-              <Text style={styles.shippingName}>{shippingAddress.fullName}</Text>
-              <Text style={styles.shippingLine}>{shippingAddress.addressLine1}</Text>
-              {shippingAddress.addressLine2 && (
-                <Text style={styles.shippingLine}>{shippingAddress.addressLine2}</Text>
-              )}
-              <Text style={styles.shippingLine}>
-                {shippingAddress.city}, {shippingAddress.state} {shippingAddress.postalCode}
-              </Text>
-              <Text style={styles.shippingLine}>{shippingAddress.country}</Text>
+            <View style={[styles.shippingSummary, { backgroundColor: colors.background, borderColor: colors.border }]}>
+              <View style={styles.shippingRow}>
+                <Ionicons name="location-outline" size={16} color={colors.primary} />
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.shippingName, { color: colors.text }]}>
+                    {shippingAddress.fullName}
+                  </Text>
+                  <Text style={[styles.shippingLine, { color: colors.textSecondary }]}>
+                    {shippingAddress.addressLine1}
+                    {shippingAddress.addressLine2 ? `, ${shippingAddress.addressLine2}` : ''}
+                  </Text>
+                  <Text style={[styles.shippingLine, { color: colors.textSecondary }]}>
+                    {shippingAddress.city}, {shippingAddress.state} {shippingAddress.postalCode}, {shippingAddress.country}
+                  </Text>
+                </View>
+                <TouchableOpacity onPress={() => setStep('shipping')}>
+                  <Text style={[styles.editLink, { color: colors.primary }]}>Edit</Text>
+                </TouchableOpacity>
+              </View>
             </View>
 
-            <View style={styles.totalDue}>
-              <Text style={styles.totalDueLabel}>Total due today</Text>
-              <Text style={styles.totalDueValue}>{formatCurrency(totalAmount)}</Text>
+            {/* Total due */}
+            <View style={[styles.totalDue, { backgroundColor: colors.background, borderColor: colors.border }]}>
+              <Text style={[styles.totalDueLabel, { color: colors.textSecondary }]}>Total due today</Text>
+              <Text style={[styles.totalDueValue, { color: colors.text }]}>
+                {formatCurrency(totalAmount)}
+              </Text>
+            </View>
+
+            {/* Trust badges */}
+            <View style={styles.trustRow}>
+              <Ionicons name="shield-checkmark-outline" size={14} color={colors.primary} />
+              <Text style={[styles.trustText, { color: colors.textMuted }]}>
+                Secured by Stripe · 256-bit SSL encryption
+              </Text>
             </View>
 
             <Button
@@ -348,17 +349,9 @@ function CheckoutForm({ navigation }: Props) {
               isLoading={isProcessingPayment}
               fullWidth
               size="lg"
+              leftIcon={<Ionicons name="card-outline" size={18} color="#fff" />}
             >
               Pay {formatCurrency(totalAmount)}
-            </Button>
-
-            <Button
-              onPress={() => setStep('shipping')}
-              variant="ghost"
-              fullWidth
-              size="sm"
-            >
-              ← Edit shipping
             </Button>
           </View>
         )}
@@ -366,6 +359,7 @@ function CheckoutForm({ navigation }: Props) {
         <View style={{ height: spacing.xl }} />
       </ScrollView>
     </KeyboardAvoidingView>
+    </SafeAreaView>
   )
 }
 
@@ -378,145 +372,64 @@ export default function CheckoutScreen(props: Props) {
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: colors.background },
+  safeArea:  { flex: 1 },
+  flex:      { flex: 1 },
   container: { padding: spacing.md, gap: spacing.md },
 
-  steps: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-  },
-  stepItem: { alignItems: 'center', gap: 4 },
-  stepCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.surface,
-  },
-  stepCircleActive: { borderColor: colors.primary },
-  stepCircleCompleted: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  stepNum: {
-    fontSize: fontSize.sm,
-    fontWeight: fontWeight.bold,
-    color: colors.textMuted,
-  },
-  stepNumActive: { color: colors.primary },
-  stepLabel: {
-    fontSize: fontSize.xs,
-    color: colors.textMuted,
-    fontWeight: fontWeight.medium,
-    textTransform: 'capitalize',
-  },
-  stepLabelActive: { color: colors.text },
-  stepLine: {
-    flex: 1,
-    height: 2,
-    backgroundColor: colors.border,
-    marginBottom: 16,
-    marginHorizontal: spacing.sm,
-  },
-  stepLineCompleted: { backgroundColor: colors.primary },
-
   card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.xl,
+    borderRadius: radius.xxl,
     borderWidth: 1,
-    borderColor: colors.border,
     padding: spacing.lg,
     gap: spacing.md,
   },
-  cardTitle: {
-    fontSize: fontSize.md,
-    fontWeight: fontWeight.semibold,
-    color: colors.text,
-  },
+  cardTitle: { fontSize: fontSize.md, fontWeight: fontWeight.semibold },
 
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: spacing.sm,
-  },
-  summaryItem: {
-    flex: 1,
-    fontSize: fontSize.sm,
-    color: colors.textSecondary,
-  },
-  summaryPrice: {
-    fontSize: fontSize.sm,
-    fontWeight: fontWeight.medium,
-    color: colors.text,
-  },
+  summaryRow: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.sm },
+  summaryItem: { flex: 1, fontSize: fontSize.sm },
+  summaryPrice: { fontSize: fontSize.sm, fontWeight: fontWeight.medium },
   summaryTotal: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     borderTopWidth: 1,
-    borderTopColor: colors.border,
     paddingTop: spacing.sm,
   },
-  summaryTotalLabel: {
-    fontSize: fontSize.base,
-    fontWeight: fontWeight.bold,
-    color: colors.text,
-  },
-  summaryTotalValue: {
-    fontSize: fontSize.base,
-    fontWeight: fontWeight.bold,
-    color: colors.text,
-  },
+  summaryTotalLabel: { fontSize: fontSize.base, fontWeight: fontWeight.bold },
+  summaryTotalValue: { fontSize: fontSize.base, fontWeight: fontWeight.bold },
 
   errorBox: {
-    backgroundColor: colors.errorBg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
     borderWidth: 1,
-    borderColor: colors.errorBorder,
     borderRadius: radius.md,
-    padding: spacing.sm + 2,
+    padding: spacing.md,
   },
-  errorText: { color: colors.error, fontSize: fontSize.sm },
+  errorText: { flex: 1, fontSize: fontSize.sm },
 
   row2: { flexDirection: 'row', gap: spacing.md },
   half: { flex: 1 },
 
   shippingSummary: {
-    backgroundColor: colors.background,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: colors.border,
     padding: spacing.md,
-    gap: 2,
   },
-  shippingName: {
-    fontSize: fontSize.sm,
-    fontWeight: fontWeight.semibold,
-    color: colors.text,
-  },
-  shippingLine: {
-    fontSize: fontSize.sm,
-    color: colors.textSecondary,
-  },
+  shippingRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
+  shippingName: { fontSize: fontSize.sm, fontWeight: fontWeight.semibold },
+  shippingLine: { fontSize: fontSize.sm, lineHeight: 20 },
+  editLink: { fontSize: fontSize.sm, fontWeight: fontWeight.semibold },
 
   totalDue: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    backgroundColor: colors.background,
-    borderRadius: radius.md,
+    alignItems: 'center',
+    borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: colors.border,
     padding: spacing.md,
   },
-  totalDueLabel: {
-    fontSize: fontSize.sm,
-    color: colors.textSecondary,
-  },
-  totalDueValue: {
-    fontSize: fontSize.base,
-    fontWeight: fontWeight.bold,
-    color: colors.text,
-  },
+  totalDueLabel: { fontSize: fontSize.sm },
+  totalDueValue: { fontSize: fontSize.lg, fontWeight: fontWeight.bold },
+
+  trustRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, justifyContent: 'center' },
+  trustText: { fontSize: fontSize.xs },
 })
