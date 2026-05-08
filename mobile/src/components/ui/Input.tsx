@@ -7,6 +7,7 @@ import {
   TextInputProps,
   ViewStyle,
   TouchableOpacity,
+  Animated,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { fontSize, fontWeight, radius, spacing } from '../../constants/theme'
@@ -23,19 +24,31 @@ interface InputProps extends TextInputProps {
 export const Input = forwardRef<TextInput, InputProps>(
   ({ label, error, hint, containerStyle, leftIcon, secureTextEntry, ...props }, ref) => {
     const { colors } = useTheme()
+    const [isFocused, setIsFocused] = useState(false)
     const [showPassword, setShowPassword] = useState(false)
     const isPassword = secureTextEntry
+
+    const borderColor = error
+      ? colors.error
+      : isFocused
+      ? colors.primary
+      : colors.border
+
+    const borderWidth = isFocused || error ? 2 : 1.5
 
     return (
       <View style={[styles.container, containerStyle]}>
         {label && (
-          <Text style={[styles.label, { color: colors.text }]}>{label}</Text>
+          <Text style={[styles.label, { color: isFocused ? colors.primary : colors.text }]}>
+            {label}
+          </Text>
         )}
         <View
           style={[
             styles.inputWrapper,
             {
-              borderColor: error ? colors.error : colors.border,
+              borderColor,
+              borderWidth,
               backgroundColor: colors.surface,
             },
           ]}
@@ -51,6 +64,14 @@ export const Input = forwardRef<TextInput, InputProps>(
             ]}
             placeholderTextColor={colors.textMuted}
             secureTextEntry={isPassword && !showPassword}
+            onFocus={(e) => {
+              setIsFocused(true)
+              props.onFocus?.(e)
+            }}
+            onBlur={(e) => {
+              setIsFocused(false)
+              props.onBlur?.(e)
+            }}
             {...props}
           />
           {isPassword && (
@@ -89,9 +110,8 @@ const styles = StyleSheet.create({
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1.5,
     borderRadius: radius.md,
-    minHeight: 48,
+    minHeight: 50,
     overflow: 'hidden',
   },
   input: {

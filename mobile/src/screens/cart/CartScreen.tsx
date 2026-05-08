@@ -93,6 +93,15 @@ export default function CartScreen({ navigation }: Props) {
           <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
             Add some products to get started
           </Text>
+          <Button
+            onPress={() => tabNav.navigate('ProductsTab')}
+            variant="outline"
+            size="md"
+            style={{ marginTop: spacing.sm }}
+            leftIcon={<Ionicons name="bag-outline" size={16} color={colors.primary} />}
+          >
+            Browse products
+          </Button>
         </View>
       </SafeAreaView>
     )

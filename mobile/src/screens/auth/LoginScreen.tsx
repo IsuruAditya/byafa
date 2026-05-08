@@ -7,7 +7,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   TouchableOpacity,
-  Image,
 } from 'react-native'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -21,8 +20,10 @@ import { setCredentials } from '../../store/slices/authSlice'
 import { loginApi } from '../../api/authApi'
 import { Input } from '../../components/ui/Input'
 import { Button } from '../../components/ui/Button'
+import { Logo } from '../../components/ui/Logo'
 import { spacing, fontSize, fontWeight, radius } from '../../constants/theme'
 import { useTheme } from '../../hooks/useTheme'
+import { Ionicons } from '@expo/vector-icons'
 import axios from 'axios'
 
 const schema = z.object({
@@ -67,37 +68,43 @@ export default function LoginScreen({ navigation }: Props) {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <StatusBar style={isDark ? 'light' : 'dark'} />
+
+      {/* Decorative background circles */}
+      <View style={[styles.circle1, { backgroundColor: colors.primaryLight }]} />
+      <View style={[styles.circle2, { backgroundColor: colors.primaryLight }]} />
+
       <ScrollView
         contentContainerStyle={styles.container}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {/* Brand */}
+        {/* ── Brand ── */}
         <View style={styles.brand}>
-          <View style={[styles.logoWrap, { backgroundColor: colors.primary }]}>
-            <Text style={styles.logoLetter}>B</Text>
+          <Logo size={72} />
+          <View style={styles.brandText}>
+            <Text style={[styles.brandName, { color: colors.text }]}>Byafa</Text>
+            <Text style={[styles.brandTagline, { color: colors.textSecondary }]}>
+              Quality goods, delivered fast
+            </Text>
           </View>
-          <Text style={[styles.brandName, { color: colors.primary }]}>Byafa</Text>
-          <Text style={[styles.brandTagline, { color: colors.textSecondary }]}>
-            Quality goods, delivered fast
-          </Text>
         </View>
 
-        {/* Card */}
+        {/* ── Card ── */}
         <View
           style={[
             styles.card,
             {
               backgroundColor: colors.surface,
               borderColor: colors.border,
-              shadowColor: isDark ? '#000' : '#000',
             },
           ]}
         >
-          <Text style={[styles.title, { color: colors.text }]}>Welcome back</Text>
-          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-            Sign in to your account
-          </Text>
+          <View style={styles.cardHeader}>
+            <Text style={[styles.title, { color: colors.text }]}>Welcome back</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+              Sign in to your account
+            </Text>
+          </View>
 
           <View style={styles.fields}>
             <Controller
@@ -116,6 +123,7 @@ export default function LoginScreen({ navigation }: Props) {
                   value={value}
                   error={errors.email?.message}
                   placeholder="you@example.com"
+                  leftIcon={<Ionicons name="mail-outline" size={18} color={colors.textMuted} />}
                 />
               )}
             />
@@ -135,6 +143,7 @@ export default function LoginScreen({ navigation }: Props) {
                   value={value}
                   error={errors.password?.message}
                   placeholder="••••••••"
+                  leftIcon={<Ionicons name="lock-closed-outline" size={18} color={colors.textMuted} />}
                 />
               )}
             />
@@ -142,6 +151,7 @@ export default function LoginScreen({ navigation }: Props) {
 
           {errors.root && (
             <View style={[styles.errorBox, { backgroundColor: colors.errorBg, borderColor: colors.errorBorder }]}>
+              <Ionicons name="alert-circle-outline" size={16} color={colors.error} />
               <Text style={[styles.errorText, { color: colors.error }]}>
                 {errors.root.message}
               </Text>
@@ -158,7 +168,7 @@ export default function LoginScreen({ navigation }: Props) {
           </Button>
         </View>
 
-        {/* Footer */}
+        {/* ── Footer ── */}
         <TouchableOpacity
           onPress={() => navigation.navigate('Register')}
           style={styles.footer}
@@ -178,28 +188,42 @@ export default function LoginScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+
+  // Decorative background
+  circle1: {
+    position: 'absolute',
+    width: 280,
+    height: 280,
+    borderRadius: 140,
+    top: -100,
+    right: -80,
+    opacity: 0.6,
+  },
+  circle2: {
+    position: 'absolute',
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    bottom: 60,
+    left: -60,
+    opacity: 0.4,
+  },
+
   container: {
     flexGrow: 1,
     justifyContent: 'center',
     padding: spacing.lg,
     gap: spacing.xl,
   },
+
+  // Brand
   brand: {
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: spacing.md,
   },
-  logoWrap: {
-    width: 64,
-    height: 64,
-    borderRadius: radius.xl,
+  brandText: {
     alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.xs,
-  },
-  logoLetter: {
-    fontSize: 32,
-    fontWeight: fontWeight.bold,
-    color: '#fff',
+    gap: spacing.xs,
   },
   brandName: {
     fontSize: fontSize.xxxl,
@@ -209,15 +233,21 @@ const styles = StyleSheet.create({
   brandTagline: {
     fontSize: fontSize.sm,
   },
+
+  // Card
   card: {
     borderRadius: radius.xxl,
     padding: spacing.lg,
-    gap: spacing.md,
+    gap: spacing.lg,
     borderWidth: 1,
-    shadowOffset: { width: 0, height: 4 },
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.08,
-    shadowRadius: 16,
-    elevation: 4,
+    shadowRadius: 24,
+    elevation: 6,
+  },
+  cardHeader: {
+    gap: spacing.xs,
   },
   title: {
     fontSize: fontSize.xl,
@@ -225,15 +255,19 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: fontSize.sm,
-    marginTop: -spacing.xs,
   },
   fields: { gap: spacing.md },
   errorBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
     borderWidth: 1,
     borderRadius: radius.md,
     padding: spacing.md,
   },
-  errorText: { fontSize: fontSize.sm },
+  errorText: { flex: 1, fontSize: fontSize.sm },
+
+  // Footer
   footer: { alignItems: 'center' },
   footerText: { fontSize: fontSize.sm },
   footerLink: { fontWeight: fontWeight.semibold },

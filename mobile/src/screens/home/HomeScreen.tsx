@@ -24,6 +24,7 @@ import { spacing, fontSize, fontWeight, radius, shadows } from '../../constants/
 import { useTheme } from '../../hooks/useTheme'
 import { formatCurrency } from '../../utils/formatCurrency'
 import { StarRating } from '../../components/ui/StarRating'
+import { Logo } from '../../components/ui/Logo'
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'Home'>
 type TabNav = BottomTabNavigationProp<MainTabParamList>
@@ -76,11 +77,14 @@ export default function HomeScreen({ navigation }: Props) {
 
       {/* ── Top bar ── */}
       <View style={[styles.topBar, { backgroundColor: colors.background }]}>
-        <View>
-          <Text style={[styles.greeting, { color: colors.textSecondary }]}>
-            {greeting()}, {user?.name?.split(' ')[0] ?? 'there'} 👋
-          </Text>
-          <Text style={[styles.topTitle, { color: colors.text }]}>Byafa</Text>
+        <View style={styles.topLeft}>
+          <Logo size={32} />
+          <View>
+            <Text style={[styles.greeting, { color: colors.textSecondary }]}>
+              {greeting()}, {user?.name?.split(' ')[0] ?? 'there'} 👋
+            </Text>
+            <Text style={[styles.topTitle, { color: colors.text }]}>Byafa</Text>
+          </View>
         </View>
         <View style={styles.topActions}>
           {/* Search — navigates to Shop tab */}
@@ -276,6 +280,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
+  },
+  topLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
   },
   greeting: { fontSize: fontSize.sm },
   topTitle: { fontSize: fontSize.xl, fontWeight: fontWeight.bold, marginTop: 2 },
